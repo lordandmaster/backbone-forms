@@ -21,6 +21,7 @@
 
   test('Default value', function() {
     var editor = new Editor().render();
+	//console.log(editor.el);
 
     deepEqual(editor.getValue(), false);
   });
@@ -45,8 +46,9 @@
   test('Correct type', function() {
     var editor = new Editor().render();
 
-    deepEqual($(editor.el).get(0).tagName, 'INPUT');
-    deepEqual($(editor.el).attr('type'), 'checkbox');
+    deepEqual($(editor.el).get(0).tagName, 'LI');
+    deepEqual($(editor.el).children().get(0).tagName, 'INPUT');
+    deepEqual($(editor.el).children().attr('type'), 'checkbox');
   });
 
   test("getValue() - returns boolean", function() {
@@ -71,7 +73,8 @@
     editor.setValue(true);
 
     deepEqual(editor.getValue(), true);
-    deepEqual($(editor.el).prop('checked'), true);
+	//console.log($(editor.el));
+    deepEqual($(editor.el).children().prop('checked'), true);
   });
 
 
@@ -98,7 +101,7 @@
     editor.focus();
 
     ok(editor.hasFocus);
-    ok(editor.$el.is(':focus'));
+    ok(editor.$el.children().is(':focus'));
   });
 
   test("focus() - triggers the 'focus' event", function() {
@@ -147,7 +150,7 @@
 
     editor.on('change', spy);
 
-    editor.$el.click();
+    editor.$el.children().click();
 
     ok(spy.calledOnce);
     ok(spy.alwaysCalledWith(editor));
@@ -160,7 +163,7 @@
 
     editor.on('focus', spy);
 
-    editor.$el.focus();
+    editor.$el.children().focus();
 
     ok(spy.calledOnce);
     ok(spy.alwaysCalledWith(editor));
@@ -175,7 +178,7 @@
 
     editor.on('blur', spy);
 
-    editor.$el.blur();
+    editor.$el.children().blur();
 
     ok(spy.calledOnce);
     ok(spy.alwaysCalledWith(editor));

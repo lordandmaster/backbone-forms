@@ -7,6 +7,11 @@
 <html>
 <head>
   <link rel="stylesheet" href="lib/qunit.css" type="text/css" media="screen" />
+  <script>
+  formfield_template = function(options) {
+	return $('<input type="checkbox"/>')[0];
+  };
+  </script>
 
   <!-- TEST LIB FILES -->
   <script type="text/javascript" src="lib/qunit.js"></script>
@@ -41,7 +46,7 @@
   <script src="../src/editors/date.js"></script>
   <script src="../src/editors/datetime.js"></script>
 
-  <script>Backbone.Form = Form</script>
+  <script>Backbone.Form = Form;</script>
 
   <script src="../src/editors/extra/list.js"></script>
 </head>

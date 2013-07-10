@@ -6,56 +6,63 @@
 Form.editors.Checkbox = Form.editors.Base.extend({
 
   defaultValue: false,
-
-  tagName: 'input',
+  tagName: 'li',
 
   events: {
-    'click':  function(event) {
+    'click input[type=checkbox]':  function(event) {
       this.trigger('change', this);
     },
-    'focus':  function(event) {
+    'focus input[type=checkbox]':  function(event) {
       this.trigger('focus', this);
     },
-    'blur':   function(event) {
+    'blur input[type=checkbox]':   function(event) {
       this.trigger('blur', this);
     }
+  },
+  
+  $inel: null,
+  
+  getInputElement: function() {
+	return this.$el.find('input[type="checkbox"]');
   },
 
   initialize: function(options) {
     Form.editors.Base.prototype.initialize.call(this, options);
+	this.$inel = this.getInputElement();
 
-    this.$el.attr('type', 'checkbox');
+    this.getInputElement().attr('type', 'checkbox');
   },
 
   /**
    * Adds the editor to the DOM
    */
   render: function() {
+	this.$el.html( this.template() );
     this.setValue(this.value);
 
     return this;
   },
 
   getValue: function() {
-    return this.$el.prop('checked');
+    return this.getInputElement().prop('checked');
   },
 
   setValue: function(value) {
     if (value) {
-      this.$el.prop('checked', true);
+      this.getInputElement().prop('checked', true);
     }
   },
 
   focus: function() {
     if (this.hasFocus) return;
 
-    this.$el.focus();
+    this.getInputElement().focus();
   },
 
   blur: function() {
     if (!this.hasFocus) return;
 
-    this.$el.blur();
+    this.getInputElement().blur();
   }
 
 });

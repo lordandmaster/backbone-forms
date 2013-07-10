@@ -1,0 +1,563 @@
+<!doctype html>
+<html>
+<head>
+	<title>Master Submission Data</title>
+	<link rel="stylesheet" href="http://www.scedev.net/styleguide/css/blob.css">
+	<style>
+		form fieldset h3 {
+			padding-top: 1em;
+			padding-bottom: 1em;
+			clear: left;
+		}
+		li.required div label:after,
+		li.required div label:before {
+			content:"";
+			display: none;
+		}
+		form ol > li > .radios input + input[type="file"], form ol > li > .checkboxes input + input[type="file"] {
+			display: none;
+		}
+		form ol > li > .radios input:checked + input[type="file"], form ol > li > .checkboxes input:checked + input[type="file"] {
+			display: block;
+		}
+	</style>
+</head>
+<body>
+<div id="container">
+<div id="content_container">
+<div id="content">
+	<header id="content_header" class="no-local-header">
+		<span class="icon-large"></span>
+		<div id="page_title">
+			<h1>Master Submissions Information</h1>
+			<h2>Uncharted 4 App SCEJ/Asia PSN Gold Edition</h2>
+		</div>
+	</header>
+<article>
+<form>
+	<fieldset>
+		<legend>Begin</legend>
+		<ol>
+			<li>
+			  <label>Begin</label>
+			  <div class="radios">
+			      <label for="new_submission" name="begin">New QA Submission</label>
+			      <input  id="new_submission" name="begin" type="radio">
+			      <label for="upload_submission" name="begin">Upload QA Submission File</label>
+			      <input  id="upload_submission" name="begin" type="radio">
+			      <input id="upload_submission_file" type="file" title="Choose&hellip;">
+			  </div>
+			  <span class="tooltip">
+			    <p>
+			     	Begin a new QA Submission Form or select a previously saved QA Submission Form file
+			    </p>
+			  </span>
+			</li>
+		</ol>
+	</fieldset>
+	<fieldset>
+		<legend>Upload Build Spec</legend>
+		<ol>
+			<li class="required">
+				<label for="upload_spec">Upload spec.xml</label>
+				<input  id="upload_spec" type="file">
+				<span class="tooltip">
+					<p>spec.xml is a result of the build process for a PS4 app. A developer that builds using the PS4 developer environment can find the spec.xml in the build directory alongside the binary.</p>
+				</span>
+			</li>
+		</ol>
+	</fieldset>
+	<fieldset>
+		<legend>Master Information</legend>
+		<ol>
+			<li class="required">
+				<label>Master type</label>
+				<div class="radios">
+			  		<label for="app" name="kind">Application</label>
+			  		<input  id="app" type="radio" name="kind">
+			  		<label for="patch" name="kind">Patch</label>
+			  		<input  id="patch" type="radio" name="kind">
+			  		<label for="package" name="kind">Package</label>
+			  		<input  id="package" type="radio" name="kind">
+			  		<label for="service_entitlement" name="kind">Service Entitlement</label>
+			  		<input  id="service_entitlement" type="radio" name="kind">
+				</div>
+				<span class="tooltip">
+					<h4>Application</h4>
+					<p>
+						All binaries of the VA (Application) Master type including Demo, Trial, and Beta
+					</p>
+					<h4>Patch</h4>
+					<p>
+						A binary of the VP (Patch) Master type
+					</p>
+					<h4>Package</h4>
+					<p>
+						A binary of the VAC (Additional Content: Package) Master type
+					</p>
+					<h4>Service Entitlement</h4>
+					<p>
+						A binary of the VAC (Additional Content: Service Entitlement) Master type
+					</p>
+				</span>
+			</li>
+			<li class="required">
+			  <label>Release Area</label>
+			  <div class="checkboxes">
+			  	<input  id="hong_kong" type="checkbox" name="release_area">
+			  	<label for="hong_kong">Hong Kong</label>
+			  	<input  id="taiwan" type="checkbox" name="release_area">
+			  	<label for="taiwan">Taiwan</label>
+			  	<input  id="singapore" type="checkbox" name="release_area">
+			  	<label for="singapore">Singapore</label>
+			  	<input  id="south_korea" type="checkbox" name="release_area">
+			  	<label for="south_korea">South Korea</label>
+			  	<input  id="malaysia" type="checkbox" name="release_area">
+			  	<label for="malaysia">Malaysia</label>
+			  	<input  id="indonesia" type="checkbox" name="release_area">
+			  	<label for="indonesia">Indonesia</label>
+			  	<input  id="thailand" type="checkbox" name="release_area">
+			  	<label for="thailand">Thailand</label>
+			  <span class="tooltip">
+			    <p></p>
+			  </span>
+			</li>
+			<li class="required">
+			  <label>External Website</label>
+			  <div class="checkboxes">
+			      <label for="web_live_area" name="website">Provide a website accessed from a web browser launched from LiveArea<sup>&trade;</sup></label>
+			      <input  id="web_live_area" name="website" type="checkbox">
+  			      <label for="web_application" name="website">Provide a website accessed from a web browser launched in the application</label>
+			      <input  id="web_application" name="website" type="checkbox">
+			      <label for="web_s2s" name="website">Provide an S2S website relevant to the application</label>
+			      <input  id="web_s2s" name="website" type="checkbox">
+
+			  </div>
+			  <span class="tooltip">
+			    <p>
+			    </p>
+			  </span>
+			</li>
+		</ol>
+	</fieldset>
+	<fieldset>
+		<legend>Basic Information</legend>
+		<ol>
+			<li class="required">
+			  <label for="static_title_id">Title ID</label>
+			  <div class="static">
+				NPXS30001_00
+			  </div>
+			  <span class="tooltip">
+			    <p>
+			      Is the SCE unique identifier for the SCEJ/Asia App called "Uncharted 4 Gold Edition"
+			    </p>
+			  </span>
+			</li>
+			<li class="required">
+			  <label for="title_id_cross_ref">Title ID (Cross Reference)</label>
+			  <input  id="title_id_cross_ref" type="text">
+			  <span class="tooltip">
+			    <p>
+			    </p>
+			  </span>
+			</li>
+			<li class="required">
+			  <label for="product_code">Product Code</label>
+			  <input  id="product_code" type="text">
+			  <span class="tooltip">
+			    <p class="info">
+			    	Format (xxxx-nnnnn)
+			    </p>
+			  </span>
+			</li>
+			<li class="required">
+			  <label>Sales Method</label>
+			  <div class="checkboxes">
+			      <label for="blu_ray" name="sales_method">Blu-ray Disc</label>
+			      <input  id="blu_ray" name="sales_method" type="checkbox">
+			      <label for="playstation_store" name="sales_method">PlayStation<sup>&reg;</sup>Store</label>
+			      <input  id="playstation_store" name="sales_method" type="checkbox">
+			  </div>
+			  <span class="tooltip">
+			    <p>
+			    </p>
+			  </span>
+			</li>
+			<li class="required">
+			  <label for="submission_date">Submission Date</label>
+			  <input  id="submission_date" type="text">
+			  <span class="tooltip">
+			    <p>
+			    </p>
+			  </span>
+			</li>
+		</ol>
+	</fieldset>
+	<fieldset>
+		<legend>Package Information</legend>
+		<ol>
+			<li class="required">
+			  <label for="tag_id">Tag ID</label>
+			  <input  id="tag_id" type="text">
+			  <span class="tooltip">
+			    <p>
+			    	This patch's unique ID
+			    </p>
+			  </span>
+			</li>
+			<li class="required">
+			  <label>Operation Manual</label>
+			  <div class="checkboxes">
+			      <label for="manual_liveArea" name="operation_manual">In LiveArea<sup>&trade;</sup></label>
+			      <input  id="manual_liveArea" name="operation_manual" type="checkbox">
+  			      <label for="manual_printed" name="operation_manual">In printed manual</label>
+			      <input  id="manual_printed" name="operation_manual" type="checkbox">
+			  </div>
+			  <span class="tooltip">
+			    <p>
+			    </p>
+			  </span>
+			</li>
+		</ol>
+	</fieldset>
+	<fieldset>
+		<legend>Basic Network Features</legend>
+		<ol>
+			<li class="required">
+			  <label for="min_players_lobby">Minimum online players in a lobby</label>
+			  <input  id="min_players_lobby" type="text">
+			  <span class="tooltip">
+			    <p>
+			    </p>
+			  </span>
+			</li>
+			<li class="required">
+			  <label for="max_players_lobby">Maximum online players in a lobby</label>
+			  <input  id="max_players_lobby" type="text">
+			  <span class="tooltip">
+			    <p>
+			    </p>
+			  </span>
+			</li>
+			<li class="required">
+			  <label for="min_players_play">Minimum online players in a play</label>
+			  <input  id="min_players_play" type="text">
+			  <span class="tooltip">
+			    <p>
+			    </p>
+			  </span>
+			</li>
+			<li class="required">
+			  <label for="max_players_play">Maximum online players in a play</label>
+			  <input  id="max_players_play" type="text">
+			  <span class="tooltip">
+			    <p>
+			    </p>
+			  </span>
+			</li>
+			<li class="required">
+			  <label>Chat</label>
+			  <div class="checkboxes">
+			      <label for="chat_text" name="chat">Text chat</label>
+			      <input  id="chat_text" name="chat" type="checkbox">
+			      <label for="voice_chat" name="chat">Voice chat</label>
+			      <input  id="voice_chat" name="chat" type="checkbox">
+			      <label for="video_chat" name="chat">Video chat</label>
+			      <input  id="video_chat" name="chat" type="checkbox">
+			  </div>
+			  <span class="tooltip">
+			    <p>
+			      
+			    </p>
+			  </span>
+			</li>
+		</ol>
+	</fieldset>
+	<fieldset>
+		<legend>PlayStation<sup>&reg;</sup>Network features</legend>
+		<ol>
+			<li class="required">
+			  <label for="np_in_game_message">NP in game message</label>
+			  <input  id="np_in_game_message" type="text">
+			  <span class="tooltip">
+			    <p>
+			    	Message for Launching Game (SessionInvitation, GameCustomData)
+			    </p>
+			  </span>
+			</li>
+			<li class="required">
+			  <label>Facebook</label>
+			  <div class="checkboxes">
+			      <label for="facebook" name="facebook">NP SNS Facebook</label>
+			      <input  id="facebook" name="facebook" type="checkbox">
+			  </div>
+			  <span class="tooltip">
+			    <p>
+			    	Enables Facebook Sharing integration
+			    </p>
+			  </span>
+			</li>
+			<li class="required">
+			  <label for="tss_enabled">Title Small Storage</label>
+			  <span id="tss_enabled" class="static">Enabled</span>
+			  <span class="tooltip">
+			    <p>
+			    	Title Small Storage allows use of the local system storage such as PS4 HDD or PSVita memory card
+			    </p>
+			  </span>
+			</li>
+			<li class="required">
+			  <label for="tss_usage">Usage of Title Small storage</label>
+			  <textarea  id="tss_usage"></textarea>
+			  <span class="tooltip">
+			    <p>
+			    	Please indicate why your software needs to use Title Small Storage
+			    </p>
+			  </span>
+			</li>
+			<li class="required">
+			  <label for="tss_enabled">Title User Storage</label>
+			  <span id="tss_enabled" class="static">Enabled</span>
+			  <span class="tooltip">
+			    <p>
+			    	Title User Storage allows use of online storage
+			    </p>
+			  </span>
+			</li>
+			<li class="required">
+			  <label for="tss_usage">Usage of Title User storage</label>
+			  <textarea  id="tss_usage"></textarea>
+			  <span class="tooltip">
+			    <p>
+			    	Please indicate why your software needs to use Title User Storage
+			    </p>
+			  </span>
+			</li>
+			<li class="required">
+			  <label for="commerce_label">Commerce Service</label>
+			  <input  id="commerce_label" type="hidden" value="{NPCOMMID}">
+			  <span class="static">Enabled</span>
+			  <span class="tooltip">
+			    <p>
+			    	Commerce Service allows users to make purchases within your App
+			    </p>
+			  </span>
+			</li>
+			<li class="required">
+			  <label>Provide "In-Game Commerce"</label>
+			  <div class="checkboxes">
+					<!-- TODO: this checkbox should show or hide the rest of the commerce section -->
+					<input  id="commerce_active" name="commerce_active" type="checkbox">
+			  </div>
+			  <span class="tooltip">
+			    <p>
+			    </p>
+			  </span>
+			</li>
+			<li class="required">
+			  <label for="commerce_dialog_active">Enable Commerce Dialog</label>
+			  <div class="checkboxes">
+			  	<input  id="commerce_dialog_active" type="checkbox">
+			  </div>
+			  <span class="tooltip">
+			    <p>
+
+			    </p>
+			  </span>
+			</li>
+			<li class="required">
+			  <label for="commerce_category_id">Commerce Category ID</label>
+			  <input  id="commerce_category_id" type="text">
+			</li>
+			<li>
+			  <label for="commerce_category_code">Activity Feed Commerce Category ID URI</label>
+			  <input  id="commerce_category_code_uri" type="text" placeholder="Optional URI for Category ID">
+			  <span class="tooltip">
+			    <p>
+			    	Commerce Category ID URI allows your App to update its Activity Feed via an external URI
+			    </p>
+			  </span>
+			</li>
+			<li class="required">
+			  <label for="commerce_product_id">Commerce Product ID</label>
+			  <input  id="commerce_product_id" type="text">
+			</li>
+			<li>
+			  <label for="commerce_product_code">Activity Feed Commerce Product ID URI</label>
+			  <input  id="commerce_product_code_uri" type="text" placeholder="Optional URI for Commerce Product ID">
+			  <span class="tooltip">
+			    <p>
+			    	Commerce Product ID URI allows your App to update its Activity Feed via an external URI
+			    </p>
+			  </span>
+			</li>
+			<li class="required">
+			  <label for="commerce_promotion_code">Promotion ID</label>
+			  <input  id="commerce_promotion_code" type="text">
+			</li>
+			<li>
+			  <label for="commerce_promotion_code">Activity Feed Promotion ID URI</label>
+			  <input  id="commerce_promotion_code_uri" type="text" placeholder="Optional URI for Promotion ID">
+			  <span class="tooltip">
+			    <p>
+			    	Promotion ID URI allows your App to update its Activity Feed via an external URI
+			    </p>
+			  </span>
+			</li>
+			<li>
+			  <label>Purchased content is immediately available</label>
+			  <div class="checkboxes">
+			      <input  id="commerce_content_availablity" name="commerce_content_availability" type="checkbox">
+			  </div>
+			  <span class="tooltip">
+			    <p>
+			    	Indicates that purchased content will be available without relaunching application
+			    </p>
+			  </span>
+			</li>
+		</ol>
+	</fieldset>
+	<fieldset>
+		<legend>Features for PlayStation<sup>&reg;</sup>Plus members</legend>
+		<ol>
+			<li>
+			  <label for="psplus_realtime_multiplay">Realtime multi play</label>
+			  <div class="checkboxes">
+			      <input  id="psplus_realtime_multiplay" type="checkbox">
+			  </div>
+			  <span class="tooltip">
+			    <p>
+			    </p>
+			  </span>
+			</li>
+			<li>
+			  <label for="psplus_async_multiplay">Asynchronous multi play</label>
+			  <div class="checkboxes">
+			      <input  id="psplus_async_multiplay" type="checkbox">
+			  </div>
+			  <span class="tooltip">
+			    <p>
+			    </p>
+			  </span>
+			</li>
+		</ol>
+	</fieldset>
+	<fieldset>
+		<legend>Trophy Information</legend>
+		<ol>
+			<li>
+			  <label for="trophy_share_ps3">Share Trophy with PS3 application</label>
+			  <div class="checkboxes">
+		      <input  id="trophy_share_ps3" type="checkbox" class="other required">
+		      <input id="trophy_share_ps3_titleid" type="text" placeholder="Title ID of PS3 App">
+			  </div>
+			  <span class="tooltip">
+			    <p>
+			    </p>
+			  </span>
+			</li>
+			<li>
+			  <label for="trophy_default_language">Trophy default language</label>
+			  <select id="trophy_default_language" class="chzn-select">
+			  	<option></option>
+			  	<option>Japanese</option>
+			  	<option>English (American)</option>
+			  	<option>English (British)</option>
+			  	<option>Korean</option>
+			  	<option>Chinese (Mandarin)</option>
+			  	<option>Thai</option>
+			  	<option>Philapeno (Tagalog)</option>
+			  	<option>Vietnamese</option>
+			  	<option>Khmer (Cambodian)</option>
+			  </select>
+			  <span class="tooltip">
+			    <p>
+			    </p>
+			  </span>
+			</li>
+		</ol>
+	</fieldset>
+	<fieldset>
+		<legend>Specification</legend>
+		<ol>
+			<li>
+			  <label>Access other applications' additional content</label>
+			  <div class="checkboxes">
+			  	<div class="other">
+			      <label for="spec_app_library_existing" name="spec_app_library_existing">Existing Titles in the Uncharted Franchise</label>
+			      <input  id="spec_app_library_existing" name="spec_app_library_existing" type="checkbox">
+					<select id="spec_app_library" multiple="multiple" data-placeholder="Existing Apps in the Uncharted Franchise">
+						<option></option>
+						<optgroup label="Uncharted">
+							<option value="NP_987654321_00" title="NP_987654321_00">Uncharted App SCEJ PSN</option>
+							<option value="NP_987654321_00" title="NP_987654321_00">Uncharted App SCEJ BD</option>
+						</optgroup>
+						<optgroup label="Uncharted 2">
+							<option value="NP_987654321_00" title="NP_987654321_00">Uncharted 2 App SCEJ PSN</option>
+							<option value="NP_987654321_00" title="NP_987654321_00">Uncharted 2 App SCEJ BD</option>
+							</optgroup>
+							<optgroup label="Uncharted 3">
+							<option value="NP_987654321_00" title="NP_987654321_00">Uncharted 3 App SCEJ PSN</option>
+							<option value="NP_987654321_00" title="NP_987654321_00">Uncharted 3 App SCEJ BD</option>
+						</optgroup>
+					</select>
+				  	<label for="spec_app_library_other_check">Other Titles</label>
+					<input  id="spec_app_library_other_check" type="checkbox">
+				  	<input  id="spec_app_library_other" type="text" placeholder="Add other NP Title IDs">
+				  </div>
+			    </div>
+			  <span class="tooltip">
+			    <p>
+			    	Applications on PlayStation platforms can share additional content between them. For instance, trophy data between the PSVita and PS4 versions of a game.
+			    </p>
+			  </span>
+			</li>
+			<li>
+			  <label>Display Resolution</label>
+			  <div class="checkboxes">
+			      <label for="display_3d" name="display_resolution">3D</label>
+			      <input  id="display_3d" name="display_resolution" type="checkbox">
+			      <label for="display_simulview" name="display_resolution">SimulView</label>
+			      <input  id="display_simulview" name="display_resolution" type="checkbox">
+			  </div>
+			  <span class="tooltip">
+			    <p>
+			     	Indicate whether your software uses 3D or SimulView features of PlayStation platforms
+			    </p>
+			  </span>
+			</li>
+			<li>
+			  <label for="display_safearea">Safearea defined by</label>
+			  <select  id="display_safearea">
+			  	<option></option>
+			  	<option value="display_safearea_90">90% fixed</option>
+			  	<option value="display_safearea_acquire">acquire from sceSystemServiceGetDisplaySafeAreaInfo()</option>
+			  </select>
+			  <span class="tooltip">
+			    <p>
+			    	Indicate how the gamer's monitor will determine the visible area of the video signal
+			    </p>
+			  </span>
+			</li>
+			<li>
+			  <label>Supported Sound Configuration</label>
+			  <div class="checkboxes">
+			      <label for="sound_support_2" name="sound_support"></label>
+			      <input  id="sound_support_2" name="sound_support" type="checkbox">
+			  </div>
+			  <span class="tooltip">
+			    <p>
+			      
+			    </p>
+			  </span>
+			</li>
+		</ol>
+	</fieldset>
+</form>
+</article>
+</div><!-- /content -->
+</div><!-- /content_container -->
+</div><!-- /container -->
+</body>
+</html>

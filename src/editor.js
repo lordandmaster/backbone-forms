@@ -15,6 +15,7 @@ Form.Editor = Form.editors.Base = Backbone.View.extend({
   defaultValue: null,
 
   hasFocus: false,
+  template: formfield_template,
 
   initialize: function(options) {
     var options = options || {};
