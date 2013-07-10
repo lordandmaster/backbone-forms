@@ -8,8 +8,19 @@
 <head>
   <link rel="stylesheet" href="lib/qunit.css" type="text/css" media="screen" />
   <script>
-  formfield_template = function(options) {
-	return $('<input type="checkbox"/>')[0];
+  formfield_template = function(specs) {
+	switch (specs.type) {
+		case 'Checkbox':
+			return $('<input type="checkbox"/>')[0];
+		case 'Radio':
+			return $('<input type="radio"/>')[0];
+		case 'Password':
+			return $('<input type="password"/>')[0];
+		case 'Textarea':
+			return $('<textarea></textarea>')[0];
+		default:
+			throw new Error('Unknown field type: ' + specs.type);
+	}
   };
   </script>
 
