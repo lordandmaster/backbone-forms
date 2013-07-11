@@ -51,6 +51,7 @@ Form.Field = Backbone.View.extend({
       title: this.createTitle()
     }, schema);
 
+	this.typeName = schema.type;
     //Get the real constructor function i.e. if type is a string such as 'Text'
     schema.type = (_.isString(schema.type)) ? Form.editors[schema.type] : schema.type;
 
@@ -128,7 +129,8 @@ Form.Field = Backbone.View.extend({
       fieldAttrs: schema.fieldAttrs,
       editorAttrs: schema.editorAttrs,
       key: this.key,
-      editorId: this.editor.id
+      editorId: this.editor.id,
+	  editorType: this.typeName
     };
   },
 

@@ -41,6 +41,15 @@
   <script src="../src/editors/date.js"></script>
   <script src="../src/editors/datetime.js"></script>
 
+	<script>
+	var form_template = function(options) {
+		if ( options.editorType == 'Text' ) options.title += 'TEXT';
+		
+		return '<li><label for="' + options.editorId + '">'
+			+ options.title + '</label><span data-editor></span>'
+			+ '<span class="tooltip" data-error></span>';
+	};
+	</script>
   <script>Backbone.Form = Form</script>
 
   <script src="../src/editors/extra/list.js"></script>
@@ -92,12 +101,12 @@
       });
         
       var schema = {
-        email:      { dataType: 'email', validators: ['required', 'email'] },
-        tel:        { type: 'Text', dataType: 'tel', validators: ['required'], help: 'Include area code' },
-        number:     { type: 'Number', validators: [/[0-9]+(?:\.[0-9]*)?/] },
-        checkbox:   { type: 'Checkbox' },
-        radio:      { type: 'Radio', options: ['Opt 1', 'Opt 2'] },
-        select:     { type: 'Select', options: ['Opt 1', 'Opt 2'] },
+        email:      { dataType: 'email', validators: ['required', 'email'], template: form_template },
+        tel:        { type: 'Text', dataType: 'tel', validators: ['required'], help: 'Include area code', template: form_template },
+        number:     { type: 'Number', validators: [/[0-9]+(?:\.[0-9]*)?/], template: form_template },
+        checkbox:   { type: 'Checkbox', template: form_template },
+        radio:      { type: 'Radio', options: ['Opt 1', 'Opt 2'], template: form_template },
+        select:     { type: 'Select', options: ['Opt 1', 'Opt 2'], template: form_template },
         groupSelect: { type: 'Select', options: [
           {
             group: 'North America', options: [
@@ -112,15 +121,15 @@
               { val: 'uk', label: 'United Kingdom' }
             ]
           }
-        ] },
-        checkboxes: { type: 'Checkboxes', options: ['Sterling', 'Lana', 'Cyril', 'Cheryl', 'Pam'] },
+        ], template: form_template },
+        checkboxes: { type: 'Checkboxes', options: ['Sterling', 'Lana', 'Cyril', 'Cheryl', 'Pam'], template: form_template },
         object:     { type: 'Object', subSchema: {
           name: {},
           age:  { type: 'Number' }
         }},
         nestedModel: { type: 'NestedModel', model: NestedModel },
         shorthand: 'Password',
-        date: { type: 'Date' },
+        date: { type: 'Date', template: form_template },
         dateTime: { type: 'DateTime', yearStart: 2000, yearEnd: 1980 },
 
         //List

@@ -1,0 +1,5 @@
+<li>
+	<label for="{{editorId}}">{{title}}</label>
+	<span data-editor></span>
+	<span class="tooltip" data-error></span>
+</li>
