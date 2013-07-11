@@ -1,22 +1,34 @@
 ;(function(Form, Editor) {
 
-  module('Hidden');
+  module('Hidden', {
+    setup: function() {
+      this.sinon = sinon.sandbox.create();
+    },
 
-  var same = deepEqual;
-
-
-  module('Hidden#initialize');
-
-  test('sets input type', function() {
-    var editor = new Editor();
-
-    same(editor.$el.attr('type'), 'hidden');
+    teardown: function() {
+      this.sinon.restore();
+    }
   });
+
+  var Model = Backbone.Model.extend({
+    schema: {
+      enabled: { type: 'Hidden' }
+    }
+  });
+
+  //module('Hidden#initialize');
 
   test('Default value', function() {
     var editor = new Editor().render();
 
-    equal(editor.getValue(), '');
+    deepEqual(editor.getValue(), '');
+  });
+  
+  test('sets input type', function() {
+    var editor = new Editor();
+    console.log(editor);
+    editor.
+    deepEqual(editor.attr('type'), 'hidden');
   });
 
 })(Backbone.Form, Backbone.Form.editors.Hidden);

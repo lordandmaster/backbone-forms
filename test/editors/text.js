@@ -1,24 +1,34 @@
 ;(function(Form, Editor) {
 
-  module('Text');
+  module('Text', {
+    setup: function() {
+      this.sinon = sinon.sandbox.create();
+    },
 
-  var same = deepEqual;
+    teardown: function() {
+      this.sinon.restore();
+    }
+  });
 
+  var Model = Backbone.Model.extend({
+    schema: {
+      enabled: { type: 'Text' }
+    }
+  });
 
   module('Text#initialize');
 
   test('Default type is text', function() {
     var editor = new Editor().render();
-
-    equal($(editor.el).attr('type'), 'text');
+    deepEqual(editor.getValue(), '');
   });
 
   test('Type can be changed', function() {
     var editor = new Editor({
-      schema: { dataType: 'tel' }
+      value: 'tel'
     }).render();
-
-    equal($(editor.el).attr('type'), 'tel');
+    console.log(editor.getValue());
+    deepEqual(editor.getValue(),'tel');
   });
 
 
@@ -59,8 +69,9 @@
 
     editor.setValue('foobar');
 
-    equal(editor.getValue(), 'foobar');
-    equal($(editor.el).val(), 'foobar');
+    deepEqual(editor.getValue(), 'foobar');
+    deepEqual($(editor.el).children().val(), 'foobar');
+
   });
 
 
@@ -88,12 +99,12 @@
     this.editor.focus();
 
     ok(this.editor.hasFocus);
-    ok(this.editor.$el.is(':focus'));
+    ok(this.editor.$el.children().is(':focus'));
   });
 
   test('triggers the "focus" event', function() {
-    var editor = this.editor,
-        spy = this.sinon.spy();
+    var editor = this.editor;
+    var spy = this.sinon.spy();
 
     editor.on('focus', spy);
 
@@ -141,7 +152,7 @@
 
     editor.on('blur', spy);
 
-    editor.blur();
+    editor.$el.children().blur();
 
     ok(spy.called);
     ok(spy.calledWith(editor));
@@ -206,45 +217,45 @@
     editor.on('change', spy);
 
     // Pressing a key
-    editor.$el.keypress();
-    editor.$el.val('a');
+    editor.$el.children().keypress();
+    editor.$el.children().val('a');
 
     stop();
     setTimeout(function(){
       callCount++;
 
-      editor.$el.keyup();
+      editor.$el.children().keyup();
 
       // Keeping a key pressed for a longer time
-      editor.$el.keypress();
-      editor.$el.val('ab');
+      editor.$el.children().keypress();
+      editor.$el.children().val('ab');
 
       setTimeout(function(){
         callCount++;
-
-        editor.$el.keypress();
-        editor.$el.val('abb');
+      
+        editor.$el.children().keypress();
+        editor.$el.children().val('abb');
 
         setTimeout(function(){
           callCount++;
 
-          editor.$el.keyup();
+          editor.$el.children().keyup();
 
           // Cmd+A; Backspace: Deleting everything
-          editor.$el.keyup();
-          editor.$el.val('');
-          editor.$el.keyup();
+          editor.$el.children().keyup();
+          editor.$el.children().val('');
+          editor.$el.children().keyup();
           callCount++;
 
           // Cmd+V: Pasting something
-          editor.$el.val('abdef');
-          editor.$el.keyup();
+          editor.$el.children().val('abdef');
+          editor.$el.children().keyup();
           callCount++;
 
           // Left; Right: Pointlessly moving around
-          editor.$el.keyup();
-          editor.$el.keyup();
-
+          editor.$el.children().keyup();
+          editor.$el.children().keyup();
+          
           ok(spy.callCount == callCount);
           ok(spy.alwaysCalledWith(editor));
 
@@ -261,7 +272,7 @@
 
     editor.on('focus', spy);
 
-    editor.$el.focus();
+    editor.$el.children().focus();
 
     ok(spy.calledOnce);
     ok(spy.alwaysCalledWith(editor));
@@ -276,7 +287,7 @@
 
     editor.on('blur', spy);
 
-    editor.$el.blur();
+    editor.$el.children().blur();
 
     ok(spy.calledOnce);
     ok(spy.alwaysCalledWith(editor));
@@ -289,7 +300,7 @@
 
     editor.on('select', spy);
 
-    editor.$el.select();
+    editor.$el.children().select();
 
     ok(spy.calledOnce);
     ok(spy.alwaysCalledWith(editor));

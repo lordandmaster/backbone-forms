@@ -5,33 +5,40 @@
  */
 Form.editors.Text = Form.Editor.extend({
 
-  tagName: 'input',
+  tagName: 'li',
 
   defaultValue: '',
 
   previousValue: '',
 
   events: {
-    'keyup':    'determineChange',
-    'keypress': function(event) {
+    'keyup input[type=text]': 'determineChange',
+    'keypress input[type=text]': function(event) {
       var self = this;
       setTimeout(function() {
         self.determineChange();
       }, 0);
     },
-    'select':   function(event) {
+    'select input[type=text]':   function(event) {
       this.trigger('select', this);
     },
-    'focus':    function(event) {
+    'focus input[type=text]':    function(event) {
       this.trigger('focus', this);
     },
-    'blur':     function(event) {
+    'blur input[type=text]':     function(event) {
       this.trigger('blur', this);
     }
   },
 
+  $inel: null,
+
+  getInputElement: function() {
+    return this.$el.find('input[type="text"]');
+  },
+
   initialize: function(options) {
     Form.editors.Base.prototype.initialize.call(this, options);
+    this.$inel = this.getInputElement();
 
     var schema = this.schema;
 
@@ -41,20 +48,22 @@ Form.editors.Text = Form.Editor.extend({
     if (schema && schema.editorAttrs && schema.editorAttrs.type) type = schema.editorAttrs.type;
     if (schema && schema.dataType) type = schema.dataType;
 
-    this.$el.attr('type', type);
+    this.getInputElement().attr('type', 'text');
   },
 
   /**
    * Adds the editor to the DOM
    */
   render: function() {
+    this.$el.html( this.template() );
     this.setValue(this.value);
 
     return this;
   },
 
   determineChange: function(event) {
-    var currentValue = this.$el.val();
+    console.log(this.previousValue);
+    var currentValue = this.getInputElement().val();
     var changed = (currentValue !== this.previousValue);
 
     if (changed) {
@@ -69,7 +78,8 @@ Form.editors.Text = Form.Editor.extend({
    * @return {String}
    */
   getValue: function() {
-    return this.$el.val();
+
+    return this.getInputElement().val();
   },
 
   /**
@@ -77,23 +87,22 @@ Form.editors.Text = Form.Editor.extend({
    * @param {String}
    */
   setValue: function(value) {
-    this.$el.val(value);
+    this.getInputElement().val(value);
   },
 
-  focus: function() {
+  focus: function() { 
     if (this.hasFocus) return;
 
-    this.$el.focus();
+    this.getInputElement().focus();
   },
 
   blur: function() {
     if (!this.hasFocus) return;
-
-    this.$el.blur();
+    this.getInputElement().blur();
   },
 
   select: function() {
-    this.$el.select();
+    this.getInputElement().select();
   }
 
 });
