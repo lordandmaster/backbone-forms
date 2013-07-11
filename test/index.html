@@ -9,6 +9,7 @@
   <link rel="stylesheet" href="lib/qunit.css" type="text/css" media="screen" />
   <script>
   formfield_template = function(specs) {
+    console.log(specs);
 	switch (specs.type) {
 		case 'Checkbox':
 			return $('<input type="checkbox"/>')[0];
@@ -18,6 +19,10 @@
 			return $('<input type="password"/>')[0];
 		case 'Textarea':
 			return $('<textarea></textarea>')[0];
+    case 'Text':
+      return $('<input type="text"/>')[0];
+    case 'Hidden':
+      return $('<input type="hidden"/>')[0];
 		default:
 			throw new Error('Unknown field type: ' + specs.type);
 	}

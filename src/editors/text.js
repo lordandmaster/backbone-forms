@@ -55,7 +55,7 @@ Form.editors.Text = Form.Editor.extend({
    * Adds the editor to the DOM
    */
   render: function() {
-    this.$el.html( this.template() );
+    this.$el.html( this.template({ type:'text' }) );
     this.setValue(this.value);
 
     return this;
