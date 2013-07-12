@@ -128,6 +128,7 @@ Form.Field = Backbone.View.extend({
       title: schema.title,
       fieldAttrs: schema.fieldAttrs,
       editorAttrs: schema.editorAttrs,
+	  schemaAttrs: schema.schemaAttrs,
       key: this.key,
       editorId: this.editor.id,
 	  editorType: this.typeName

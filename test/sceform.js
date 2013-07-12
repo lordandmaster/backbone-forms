@@ -13,78 +13,6 @@ module('SceForm#initialize', {
   }
 });
 
-test('prefers schema from options over model', function() {
-  var model = new Backbone.Model();
-
-  model.schema = { fromModel: 'Text' };
-
-  var schema = { fromOptions: 'Text' };
-
-  var form = new SceForm({
-    schema: schema,
-    model: model
-  });
-
-  same(form.schema, schema);
-});
-
-test('prefers schema from options over model - when schema is a function', function() {
-  var model = new Backbone.Model();
-
-  model.schema = { fromModel: 'Text' };
-
-  var schema = function() {
-    return { fromOptions: 'Text' };
-  }
-
-  var form = new SceForm({
-    schema: schema,
-    model: model
-  });
-
-  same(form.schema, schema());
-});
-
-test('uses from model if provided', function() {
-  var model = new Backbone.Model();
-
-  model.schema = { fromModel: 'Text' };
-
-  var form = new SceForm({
-    model: model
-  });
-
-  same(form.schema, model.schema);
-});
-
-test('uses from model if provided - when schema is a function', function() {
-  var model = new Backbone.Model();
-  
-  model.schema = function() {
-    return { fromModel: 'Text' };
-  }
-
-  var form = new SceForm({
-    model: model
-  });
-
-  same(form.schema, model.schema());
-});
-
-test('stores important options', function() {
-  var options = {
-    model: new Backbone.Model(),
-    data: { foo: 1 },
-    idPrefix: 'foo'
-  }
-
-  var form = new SceForm(options);
-
-  same(form.model, options.model);
-  same(form.data, options.data);
-  same(form.idPrefix, options.idPrefix);
-});
-
 test('overrides defaults', function() {
   var options = {
     template: _.template('<b></b>'),
@@ -135,7 +63,10 @@ test('sets selectedFields - with options.fields', function() {
 
 test('sets selectedFields - defaults to using all fields in schema', function() {
   var form = new SceForm({
-    schema: { name: 'Text', age: 'Number' }
+    specs: [{ name: 'Set', fields: [
+		{ name: 'name', datatype: 'text' },
+		{ name: 'age', datatype: 'int' }
+	]}]
   });
 
   same(form.selectedFields, ['name', 'age']);
@@ -145,7 +76,10 @@ test('creates fields', function() {
   this.sinon.spy(SceForm.prototype, 'createField');
 
   var form = new SceForm({
-    schema: { name: 'Text', age: { type: 'Number' } }
+    specs: [{ name: 'Set', fields: [
+		{ name: 'name', datatype: 'text' },
+		{ name: 'age', datatype: 'int' }
+	]}]
   });
 
   same(form.createField.callCount, 2);
@@ -157,29 +91,29 @@ test('creates fields', function() {
       schemaArg = args[1];
 
   same(keyArg, 'name');
-  same(schemaArg, 'Text');
+  same(schemaArg.type, 'Text');
 
   var args = form.createField.args[1],
       keyArg = args[0],
       schemaArg = args[1];
 
   same(keyArg, 'age');
-  same(schemaArg, { type: 'Number' });
+  same(schemaArg.type, 'Text');
 });
 
 test('creates fieldsets - with "fieldsets" option', function() {
   this.sinon.spy(SceForm.prototype, 'createFieldset');
 
   var form = new SceForm({
-    schema: {
-      name: 'Text',
-      age: { type: 'Number' },
-      password: 'Password'
-    },
-    fieldsets: [
-      ['name', 'age'],
-      ['password']
-    ]
+    specs: [
+		{ name: 'Set1', fields: [
+			{ name: 'name', datatype: 'text' },
+			{ name: 'age', datatype: 'int' }
+		]},
+		{ name: 'Set2', fields: [
+			{ name: 'hi', datatype: 'boolean' }
+		]}
+	]
   });
 
   same(form.createFieldset.callCount, 2);
@@ -189,33 +123,12 @@ test('creates fieldsets - with "fieldsets" option', function() {
   var args = form.createFieldset.args[0],
       schemaArg = args[0];
 
-  same(schemaArg, ['name', 'age']);
+  same(schemaArg.fields, ['name', 'age']);
 
   var args = form.createFieldset.args[1],
       schemaArg = args[0];
 
-  same(schemaArg, ['password']);
-});
-
-test('creates fieldsets - defaults to all fields in one fieldset', function() {  
-  this.sinon.spy(SceForm.prototype, 'createFieldset');
-
-  var form = new SceForm({
-    schema: {
-      name: 'Text',
-      age: { type: 'Number' },
-      password: 'Password'
-    }
-  });
-
-  same(form.createFieldset.callCount, 1);
-  same(form.fieldsets.length, 1);
-
-  //Check createFieldset() was called correctly
-  var args = form.createFieldset.args[0],
-      schemaArg = args[0];
-
-  same(schemaArg, ['name', 'age', 'password']);
+  same(schemaArg.fields, ['hi']);
 });
 
 
@@ -234,7 +147,10 @@ test('creates a new instance of the Fieldset defined on the form', function() {
   var MockFieldset = Backbone.View.extend();
   
   var form = new SceForm({
-    schema: { name: 'Text', age: 'Number' },
+    specs: [{ name: 'Set', fields: [
+		{ name: 'name', datatype: 'text' },
+		{ name: 'age', datatype: 'int' }
+	]}],
     Fieldset: MockFieldset
   });
 
