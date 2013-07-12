@@ -14,6 +14,7 @@ var baseDir = __dirname + '/..',
 //Files to concatenate into main file
 var fileList = [
   'form.js',
+  'sceform.js',
   'validators.js',
   'fieldset.js',
   'field.js',

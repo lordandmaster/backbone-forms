@@ -16,10 +16,11 @@ define(['jquery', 'underscore', 'backbone'], function($, _, Backbone) {
 
 
   //Metadata
-  Form.VERSION = '{{version}}';
+  SceForm.VERSION = Form.VERSION = '{{version}}';
 
   //Exports
+  Backbone.SceForm = SceForm;
   Backbone.Form = Form;
 
-  return Form;
+  return SceForm;
 });
