@@ -25,14 +25,11 @@ var SceForm = Form.extend({
 	},
 	
 	mapSceSpecsToForm: function ( options ) {
-		var sce_spec   = options.specs || [];
-		var template   = options.fieldTemplate || SceForm.Field.template;
-		var use_chosen = options.useChosen || SceForm.DEFAULTS.useChosen;
-		var chosen_opt = options.chosenOptions || SceForm.DEFAULTS.chosenOptions;
-		
-		if ( !sce_spec || sce_spec.length < 1 ) {
+		if ( !options || !options.specs || options.specs < 1 ) {
 			return {};
 		}
+		
+		var sce_spec   = options.specs;
 	
 		var model = {};     // Passed into Backbone.Model constructor
 		var schema = {};    // In format expected by Form
@@ -47,6 +44,23 @@ var SceForm = Form.extend({
 			for ( var jj = 0; jj < sce_fieldset.length; jj++ ) {
 				var sce_field = sce_fieldset[jj];
 				var field = {};
+				
+				// TODO: Clean this up
+				var template = _.firstDefined(
+					sce_field.template,
+					options.fieldTemplate,
+					SceForm.Field.template
+				);
+				var use_chosen = _.firstDefined(
+					sce_field.useChosen,
+					options.useChosen,
+					SceForm.DEFAULTS.useChosen
+				);
+				var chosen_opt = _.firstDefined(
+					sce_field.chosenOptions,
+					options.chosenOptions,
+					SceForm.DEFAULTS.chosenOptions
+				);
 				
 				// TODO: Clean this up. This is a hack.
 				if ( sce_field.datatype == 'range' ) {
