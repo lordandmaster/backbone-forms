@@ -496,8 +496,9 @@
     var spy = this.sinon.spy();
 
     editor.on('focus', spy);
-
-    editor.$el.focus();
+	
+	// Needed since we can't focus on hiddden elements
+    editor.$el.triggerHandler('focus');
 
     ok(spy.calledOnce);
     ok(spy.alwaysCalledWith(editor));

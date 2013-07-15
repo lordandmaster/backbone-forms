@@ -124,6 +124,7 @@ var SceForm = Form.extend({
 				field.title       = sce_field.label;
 				field.schemaAttrs = sce_field;
 				field.template    = template;
+				field.options     = sce_field.options;
 				
 				// Attach to schema, model, and structure
 				schema[ sce_field.name ] = field;

@@ -6,6 +6,8 @@
  * Requires an 'options' value on the schema.
  */
 Form.editors.Chosen = Form.editors.Select.extend({
+
+	chosenOptions: {},
 	
 	initialize: function (options) {
 		Form.editors.Select.prototype.initialize.call(this, options);
@@ -14,7 +16,7 @@ Form.editors.Chosen = Form.editors.Select.extend({
 			throw new Error('Chosen plugin not detected!');
 		}
 		
-		this.$el.chosen( options.chosenOptions );
+		this.chosenOptions = options.chosenOptions;
 	},
 	
 	focus: function() {
@@ -32,6 +34,12 @@ Form.editors.Chosen = Form.editors.Select.extend({
 		
 		// See comment in focus()
 		this.$el.triggerHandler('blur');
+	},
+	
+	render: function() {
+		Form.editors.Select.prototype.render.call(this);
+		
+		this.$el.chosen( this.chosenOptions );
 	}
 	
 });
