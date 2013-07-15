@@ -157,7 +157,11 @@ Form.Field = Backbone.View.extend({
 
       if (_.isUndefined(selection)) return;
 
-      $container.append(editor.render().el);
+      if ( $container.attr('replace') === undefined ) {
+		$container.append(editor.render().el);
+	  } else {
+		$container.replaceWith( editor.render().el );
+	  }
     });
 
     this.setElement($field);

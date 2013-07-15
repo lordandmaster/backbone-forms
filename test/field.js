@@ -266,6 +266,16 @@ test('with data-editor and data-error placeholders', function() {
   same(field.$el.html(), 'Title<b data-editor=""><input class="title"></b><i data-error=""></i>');
 });
 
+test('with replace placeholder', function() {
+	var field = new Field({
+		key: 'title',
+		schema: { type: 'Text' },
+		template: _.template('<div><span data-editor replace></span></div>', null, Form.templateSettings)
+	}).render();
+	
+	same(field.$el.html(), '<input class="title">');
+});
+
 
 
 module('Field#validate', {
