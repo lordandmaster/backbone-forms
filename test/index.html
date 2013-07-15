@@ -208,11 +208,11 @@ These use the individual source files. Use this while developing
 
 	<script>
 	$(function() {
-		var specs = [
+		var specs = { categories: { category: [
 			{
 				name: 'category1',
 				description: 'something',
-				fields: [
+				fields: { field: [
 					{
 						name: 'input_name',
 						label: 'Name',
@@ -232,12 +232,12 @@ These use the individual source files. Use this while developing
 						datatype: 'textarea',
 						description: 'Write a story maybe'
 					}
-				]
+				]}
 			},
 			{
 				name: 'category2',
 				description: 'Another category',
-				fields: [
+				fields: { field: [
 					{
 						name: 'input_date',
 						label: 'When were bricks made?',
@@ -284,9 +284,9 @@ These use the individual source files. Use this while developing
 							'funky', 'squirmy', 'puny', 'confuddling'
 						]
 					}
-				]
+				]}
 			},
-		];
+		]}};
 		
 		var form = new Backbone.SceForm({
 			specs: specs,

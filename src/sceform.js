@@ -25,20 +25,27 @@ var SceForm = Form.extend({
 	},
 	
 	mapSceSpecsToForm: function ( options ) {
-		if ( !options || !options.specs || options.specs < 1 ) {
+		if ( !options || !options.specs ) {
+			return {};
+		}
+		if ( options.specs.categories && options.specs.categories.category ) {
+			options.specs = options.specs.categories.category;
+		}
+		if ( options.specs.length < 1 ) {
 			return {};
 		}
 		
-		var sce_spec   = options.specs;
+		var sce_spec = options.specs;
 	
 		var model = {};     // Passed into Backbone.Model constructor
 		var schema = {};    // In format expected by Form
 		var fieldsets = []; // In format expected by Form
 		
 		for ( var ii = 0; ii < sce_spec.length; ii++ ) {
-			
-			var sce_fieldset  = sce_spec[ii].fields;
+		
 			var fields        = [];
+			var sce_fieldset  = ( sce_spec[ii].fields.field )
+				? sce_spec[ii].fields.field : sce_spec[ii].fields;
 			
 			// Each field in the fieldset
 			for ( var jj = 0; jj < sce_fieldset.length; jj++ ) {
