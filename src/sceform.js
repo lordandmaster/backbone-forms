@@ -131,7 +131,22 @@ var SceForm = Form.extend({
 				field.title       = sce_field.label;
 				field.schemaAttrs = sce_field;
 				field.template    = template;
-				field.options     = sce_field.options;
+
+				// Assign and format options for select fields
+				if ( sce_field.options ) {
+					if ( sce_field.options.option ) {
+						field.options = [];
+
+						for ( var oi = 0; oi < sce_field.options.option.length; oi++ ) {
+							field.options[ field.options.length ] = {
+								  val: sce_field.options.option[oi].value,
+								label: sce_field.options.option[oi].label
+							};
+						}
+					} else {
+						field.options = sce_field.options;
+					}
+				}
 				
 				// Attach to schema, model, and structure
 				schema[ sce_field.name ] = field;
@@ -159,7 +174,7 @@ var SceForm = Form.extend({
 	// STATICS
 	
 	DEFAULTS: {
-		useChosen: true,
+		useChosen: false,
 		chosenOptions: { }
 	}
 	

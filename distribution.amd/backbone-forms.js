@@ -10,7 +10,7 @@
  * License and more information at:
  * http://github.com/powmedia/backbone-forms
  */
-define(['jquery', 'underscore', 'backbone'], function($, _, Backbone) {
+define(['jquery', 'underscore', 'backbone1.0'], function($, _, Backbone) {
 
   /**
  * Underscore extensions
@@ -602,7 +602,22 @@ var SceForm = Form.extend({
 				field.title       = sce_field.label;
 				field.schemaAttrs = sce_field;
 				field.template    = template;
-				field.options     = sce_field.options;
+
+				// Assign and format options for select fields
+				if ( sce_field.options ) {
+					if ( sce_field.options.option ) {
+						field.options = [];
+
+						for ( var oi = 0; oi < sce_field.options.option.length; oi++ ) {
+							field.options[ field.options.length ] = {
+								  val: sce_field.options.option[oi].value,
+								label: sce_field.options.option[oi].label
+							};
+						}
+					} else {
+						field.options = sce_field.options;
+					}
+				}
 				
 				// Attach to schema, model, and structure
 				schema[ sce_field.name ] = field;
@@ -635,6 +650,7 @@ var SceForm = Form.extend({
 	}
 	
 });
+
   
 //==================================================================================================
 //VALIDATORS
@@ -856,10 +872,11 @@ Form.Fieldset = Backbone.View.extend({
   //STATICS
 
   template: _.template('\
-    <fieldset data-fields>\
+    <fieldset>\
       <% if (legend) { %>\
         <legend><%= legend %></legend>\
       <% } %>\
+			<ol data-fields></ol> \
     </fieldset>\
   ', null, Form.templateSettings)
 
@@ -1024,7 +1041,11 @@ Form.Field = Backbone.View.extend({
 
       if (_.isUndefined(selection)) return;
 
-      $container.append(editor.render().el);
+      if ( $container.attr('replace') === undefined ) {
+		$container.append(editor.render().el);
+	  } else {
+		$container.replaceWith( editor.render().el );
+	  }
     });
 
     this.setElement($field);

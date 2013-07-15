@@ -113,10 +113,11 @@ Form.Fieldset = Backbone.View.extend({
   //STATICS
 
   template: _.template('\
-    <fieldset data-fields>\
+    <fieldset>\
       <% if (legend) { %>\
         <legend><%= legend %></legend>\
       <% } %>\
+			<ol data-fields></ol> \
     </fieldset>\
   ', null, Form.templateSettings)
 
