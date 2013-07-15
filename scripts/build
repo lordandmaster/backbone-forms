@@ -13,6 +13,7 @@ var baseDir = __dirname + '/..',
 
 //Files to concatenate into main file
 var fileList = [
+	'utilities.js',
   'form.js',
   'sceform.js',
   'validators.js',
@@ -27,6 +28,7 @@ var fileList = [
   'editors/hidden.js',
   'editors/checkbox.js',
   'editors/select.js',
+	'editors/chosen.js',
   'editors/radio.js',
   'editors/checkboxes.js',
   'editors/object.js',

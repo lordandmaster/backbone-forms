@@ -22,5 +22,11 @@ define(['jquery', 'underscore', 'backbone'], function($, _, Backbone) {
   Backbone.SceForm = SceForm;
   Backbone.Form = Form;
 
+  for ( var key in Form ) {
+		if ( !SceForm.hasOwnProperty(key) ) {
+			SceForm[key] = Form[key];
+		}
+  }
+
   return SceForm;
 });

@@ -37,9 +37,9 @@
   Backbone.Form = Form;
   
   for ( var key in Form ) {
-	if ( !SceForm.hasOwnProperty(key) ) {
-		SceForm[key] = Form[key];
-	}
+		if ( !SceForm.hasOwnProperty(key) ) {
+			SceForm[key] = Form[key];
+		}
   }
 
 })(this);
