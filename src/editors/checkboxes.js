@@ -9,7 +9,8 @@
  */
 Form.editors.Checkboxes = Form.editors.Select.extend({
 
-  tagName: 'ul',
+  tagName: 'div',
+	className: 'checkboxes',
 
   events: {
     'click input[type=checkbox]': function() {
@@ -65,7 +66,7 @@ Form.editors.Checkboxes = Form.editors.Select.extend({
     var self = this;
 
     _.each(array, function(option, index) {
-      var itemHtml = '<li>';
+      var itemHtml = '';
       if (_.isObject(option)) {
         var val = (option.val || option.val === 0) ? option.val : '';
         itemHtml += ('<input type="checkbox" name="'+self.getName()+'" value="'+val+'" id="'+self.id+'-'+index+'" />');
@@ -75,7 +76,7 @@ Form.editors.Checkboxes = Form.editors.Select.extend({
         itemHtml += ('<input type="checkbox" name="'+self.getName()+'" value="'+option+'" id="'+self.id+'-'+index+'" />');
         itemHtml += ('<label for="'+self.id+'-'+index+'">'+option+'</label>');
       }
-      itemHtml += '</li>';
+      itemHtml += '';
       html.push(itemHtml);
     });
 
