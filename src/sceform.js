@@ -185,6 +185,12 @@ var SceForm = Form.extend({
 			}
 		}
 		
+		if ( sce_field.current_value instanceof Array
+			&& sce_field.current_value.length < 1 )
+		{
+			sce_field.current_value = null;
+		}
+		
 		// Attach to schema, model, and structure
 		result.schema[ sce_field.name ] = field;
 		result.model[ sce_field.name ]  = sce_field.current_value;

@@ -58,22 +58,26 @@ Form.Field = Backbone.View.extend({
     return schema;
   },
 
-  /**
-   * Creates the editor specified in the schema; either an editor string name or
-   * a constructor function
-   *
-   * @return {View}
-   */
-  createEditor: function() {
-    var options = _.extend(
-      _.pick(this, 'schema', 'form', 'key', 'model', 'value'),
-      { id: this.createEditorId() }
-    );
+	/**
+	* Creates the editor specified in the schema; either an editor string name or
+	* a constructor function
+	*
+	* @return {View}
+	*/
+	createEditor: function() {
+		var options = _.extend(
+			_.pick(this, 'schema', 'form', 'key', 'model', 'value'),
+			{
+				id: this.createEditorId(),
+				chosenOptions: this.schema.schemaAttrs.chosenOptions,
+				placeholder: this.schema.schemaAttrs.placeholder
+			}
+		);
 
-    var constructorFn = this.schema.type;
+		var constructorFn = this.schema.type;
 
-    return new constructorFn(options);
-  },
+		return new constructorFn(options);
+	},
 
   /**
    * Creates the ID that will be assigned to the editor
