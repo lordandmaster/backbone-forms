@@ -82,7 +82,7 @@
     var editor = new Editor({
       schema: schema
     }).render();
-    equal($(editor.el).get(0).tagName, 'UL');
+    equal($(editor.el).get(0).tagName, 'DIV');
     notEqual($(editor.el).find('input[type=checkbox]').length, 0);
   });
 

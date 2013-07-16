@@ -7,7 +7,7 @@
  */
 Form.editors.Chosen = Form.editors.Select.extend({
 
-	chosenOptions: {},
+	chosenOptions: null,
 	
 	initialize: function (options) {
 		Form.editors.Select.prototype.initialize.call(this, options);
@@ -16,7 +16,8 @@ Form.editors.Chosen = Form.editors.Select.extend({
 			throw new Error('Chosen plugin not detected!');
 		}
 		
-		this.$el.chosen( options.chosenOptions );
+		this.chosenOptions = options.chosenOptions;
+		// this.$el.chosen( options.chosenOptions );
 	},
 	
 	focus: function() {
@@ -34,6 +35,16 @@ Form.editors.Chosen = Form.editors.Select.extend({
 		
 		// See comment in focus()
 		this.$el.triggerHandler('blur');
+	},
+	
+	initDisplay: function() {
+		this.$el.chosen( this.chosenOptions );
+	},
+	
+	remove: function() {
+		// Kill the chosen stuff
+		this.$el.next().remove();
+		Form.editors.Chosen.__super__.remove.call(this);
 	}
 	
 });

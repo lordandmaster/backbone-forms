@@ -5,6 +5,8 @@
 
 var Form = Backbone.View.extend({
 
+	_chosen_editors: [],
+
   /**
    * Constructor
    * 
@@ -116,6 +118,10 @@ var Form = Backbone.View.extend({
     var field = new this.Field(options);
 
     this.listenTo(field.editor, 'all', this.handleEditorEvent);
+	
+	if ( schema && schema.type == 'Chosen' ) {
+		this._chosen_editors[ this._chosen_editors.length ] = field.editor;
+	}
 
     return field;
   },
@@ -422,7 +428,27 @@ var Form = Backbone.View.extend({
     });
 
     Backbone.View.prototype.remove.call(this);
-  }
+  },
+  
+	/**
+	 * Execute $.chosen on all the editors. This should only be called after the
+	 * selects have been attached to the DOM. Because chosen is weird like that?
+	 */
+	initChosens: function() {
+		for ( var ii = 0; ii < this._chosen_editors.length; ii++ ) {
+			this._chosen_editors[ii].initDisplay();
+		}
+	},
+  
+	/**
+	 * Apply element to DOM - this method should be used instead of manually
+	 * appending the html because initChosens needs to be executed.
+	 */
+	renderTo: function (parent, method) {
+		method = method || 'html';
+		$(parent)[method]( this.render().el );
+		this.initChosens();
+	}
 
 }, {
 

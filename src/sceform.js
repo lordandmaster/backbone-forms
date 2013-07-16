@@ -12,6 +12,19 @@
 
 var SceForm = Form.extend({
 	
+	/**
+	 * Constructor
+	 * 
+	 * @param {Object} [options.schema]
+	 * @param {Backbone.Model} [options.model]
+	 * @param {Object} [options.data]
+	 * @param {String[]|Object[]} [options.fieldsets]
+	 * @param {String[]} [options.fields]
+	 * @param {String} [options.idPrefix]
+	 * @param {Form.Field} [options.Field]
+	 * @param {Form.Fieldset} [options.Fieldset]
+	 * @param {Function} [options.template]
+	 */
 	initialize: function (options) {
 	
 		options = options || {};
@@ -24,6 +37,13 @@ var SceForm = Form.extend({
 		
 	},
 	
+	/**
+	 * Get a Form spec from the SceForm spec
+	 *
+	 * @param {Object} @see options from initialize()
+	 *
+	 * @return spec in Form format
+	 */
 	mapSceSpecsToForm: function ( options ) {
 		if ( !options || !options.specs ) {
 			return {};
@@ -36,145 +56,229 @@ var SceForm = Form.extend({
 		}
 		
 		var sce_spec = options.specs;
-	
-		var model = {};     // Passed into Backbone.Model constructor
-		var schema = {};    // In format expected by Form
-		var fieldsets = []; // In format expected by Form
+		
+		var result = {
+			model: {},     // Passed into Backbone.Model constructor
+			schema: {},    // In format expected by Form
+			fieldsets: []  // In format expected by Form
+		};
 		
 		for ( var ii = 0; ii < sce_spec.length; ii++ ) {
+			this._parseFieldset( result, options, sce_spec[ii] );
+		}
 		
-			var fields        = [];
-			var sce_fieldset  = ( sce_spec[ii].fields.field )
-				? sce_spec[ii].fields.field : sce_spec[ii].fields;
-			
-			// Each field in the fieldset
-			for ( var jj = 0; jj < sce_fieldset.length; jj++ ) {
-				var sce_field = sce_fieldset[jj];
-				var field = {};
-				
-				// TODO: Clean this up
-				var template = _.firstDefined(
-					sce_field.template,
-					options.fieldTemplate,
-					SceForm.Field.template
-				);
-				var use_chosen = _.firstDefined(
-					sce_field.useChosen,
-					options.useChosen,
-					SceForm.DEFAULTS.useChosen
-				);
-				var chosen_opt = _.firstDefined(
-					sce_field.chosenOptions,
-					options.chosenOptions,
-					SceForm.DEFAULTS.chosenOptions
-				);
-				
-				// TODO: Clean this up. This is a hack.
-				if ( sce_field.datatype == 'range' ) {
-					var sce_field1_name = sce_field.name + '_min';
-					var sce_field2_name = sce_field.name + '_max';
-					var field1 = { title: sce_field.label + ' Min', template: template, schemaAttrs: sce_field };
-					var field2 = { title: sce_field.label + ' Max', template: template, schemaAttrs: sce_field };
-					schema[ sce_field1_name ] = field1;
-					schema[ sce_field2_name ] = field2;
-					model[ sce_field1_name ] = (sce_field.current_value) ? sce_field.current_value[0] : null;
-					model[ sce_field2_name ] = (sce_field.current_value) ? sce_field.current_value[1] : null;
-					fields[ fields.length ] = sce_field1_name;
-					fields[ fields.length ] = sce_field2_name;
-					continue;
-				}
-				
-				// Map SceForm::datatype to Form::Type
-				switch ( sce_field.datatype ) {
-					
-					//// Alphabetically sorted
-					case 'boolean':
-						field.type = 'Checkbox';
-						break;
-					case 'date':
-						field.type = 'Date';
-						break;
-					case 'int':
-						field.type = 'Text';
-						break;
-					/*case 'range':
-						break;*/
-					case 'single_select':
-						field.type = use_chosen ? 'Chosen' : 'Select';
-						field.chosenOptions = use_chosen ? chosen_opt : undefined;
-						break;
-					case 'multi_select':
-						field.type = use_chosen ? 'Chosen' : 'Checkboxes';
-						field.chosenOptions = use_chosen ? chosen_opt : undefined;
-						break;
-					case 'text':
-						field.type = 'Text';
-						break;
-					case 'textarea':
-						field.type = 'TextArea';
-						break;
-					case 'time':
-						field.type = 'DateTime';
-						break;
-					case 'uint':
-						field.type = 'Text';
-						break;
-					
-					// Force each spec type to be explicitly mapped
-					default:
-						throw new Error(
-							"Unknown spec.datatype: '" +
-							sce_field.datatype + "'"
-						);
-				}
-				
-				field.title       = sce_field.label;
-				field.schemaAttrs = sce_field;
-				field.template    = template;
-
-				// Assign and format options for select fields
-				if ( sce_field.options ) {
-					if ( sce_field.options.option ) {
-						field.options = [];
-
-						for ( var oi = 0; oi < sce_field.options.option.length; oi++ ) {
-							field.options[ field.options.length ] = {
-								  val: sce_field.options.option[oi].value,
-								label: sce_field.options.option[oi].label
-							};
-						}
-					} else {
-						field.options = sce_field.options;
-					}
-				}
-				
-				// Attach to schema, model, and structure
-				schema[ sce_field.name ] = field;
-				model[ sce_field.name ]  = sce_field.current_value;
-				fields[ fields.length ]  = sce_field.name;
+		result.model = new Backbone.Model(result.model);
+		return result;
+	},
+	
+	/**
+	 * Parses a single fieldset from the SceForm spec
+	 *
+	 * @param {Object} Reference to container for fieldset
+	 * @param {Object} @see options from initialize()
+	 * @param {Object} Fieldset definition in SceForm format
+	 *
+	 * @return Fieldset definition in Form format
+	 */
+	_parseFieldset: function (result, options, spec) {
+		var fields        = [];
+		var sce_fieldset  = ( spec.fields.field )
+			? spec.fields.field : spec.fields;
+		
+		for ( var ii = 0; ii < sce_fieldset.length; ii++ ) {
+			this._parseField( fields, result, options, sce_fieldset[ii] );
+		}
+		
+		result.fieldsets[ result.fieldsets.length ] = {
+			legend: spec.name,
+			help:   spec.description,
+			fields: fields
+		};
+		
+		// Recurse over nested categories
+		if ( spec.categories ) {
+			var sce_spec = spec.categories.category;
+			for ( var ii = 0; ii < sce_spec.length; ii++ ) {
+				this._parseFieldset( result, options, sce_spec[ii] );
 			}
+		}
+	},
+	
+	/**
+	 * Parses a single field from the SceForm spec
+	 *
+	 * @param {Object} Reference to container for field
+	 * @param {Object} Reference to container for fieldset
+	 * @param {Object} @see options from initialize()
+	 * @param {Object} field definition in SceForm format
+	 */
+	_parseField: function (fields, result, options, sce_field) {
+		var props = this._getFieldOptions( sce_field, options );
+		
+		if ( sce_field.datatype == 'range' ) {
+			this._parseRangeField( fields, result, props, sce_field );
+		} else {
+			this._parseNormalField( fields, result, props, sce_field );
+		}
+		
+		// Recurse over any dependent fields
+		if ( sce_field.dependent_fields ) {
+			var sce_fieldset = sce_field.dependent_fields.field;
+			for ( var ii = 0; ii < sce_fieldset.length; ii++ ) {
+				this._parseField( fields, result, options, sce_fieldset[ii] );
+			}
+		}
+	},
+	
+	/**
+	 * Parses a single range field from the SceForm spec
+	 *
+	 * @param @see params from _parseField (these should always be identical)
+	 */
+	_parseRangeField: function (fields, result, options, sce_field) {
+		var makeRangeField = function(name, label, cvindex) {
+			var name  = sce_field.name + name;
+			var label = sce_field.label + label;
+			var value = (sce_field.current_value) ? sce_field.current_value[cvindex] : null;
 			
-			// Append to structure
-			fieldsets[ fieldsets.length ] = {
-				legend: sce_spec[ii].name,
-				help:   sce_spec[ii].description,
-				fields: fields
+			var field = { title: label, template: options.fieldTemplate, schemaAttrs: sce_field };
+			
+			result.schema[ name ]   = field;
+			result.model[ name ]    = value;
+			fields[ fields.length ] = name;
+		};
+		
+		makeRangeField('_min', ' Min', 0);
+		makeRangeField('_max', ' Max', 1);
+	},
+	
+	/**
+	 * Parses a single non-range field from the SceForm spec
+	 *
+	 * @param @see params from _parseField (these should always be identical)
+	 */
+	_parseNormalField: function (fields, result, options, sce_field) {
+		var field = this._makeNewFieldByType( options, sce_field );
+		
+		field.name        = sce_field.name;
+		field.title       = sce_field.label;
+		field.schemaAttrs = sce_field;
+		field.template    = options.fieldTemplate;
+		
+		if ( sce_field.options ) {
+			field.options = this._parseSelectOptions( sce_field );
+		}
+		
+		// Attach to schema, model, and structure
+		result.schema[ sce_field.name ] = field;
+		result.model[ sce_field.name ]  = sce_field.current_value;
+		fields[ fields.length ]         = sce_field.name;
+	},
+	
+	/**
+	 * Parses a set of select Options in SceForm format
+	 *
+	 * @param {Object} field definition in SceForm format
+	 *
+	 * @return Array of options in Form format
+	 */
+	_parseSelectOptions: function (sce_field) {
+		if ( !sce_field.options.option ) {
+			return sce_field.options;
+		}
+		
+		var options = [];
+
+		for ( var oi = 0; oi < sce_field.options.option.length; oi++ ) {
+			options[ options.length ] = {
+				  val: sce_field.options.option[oi].value,
+				label: sce_field.options.option[oi].label
 			};
 		}
 		
+		return options;
+	},
+	
+	/**
+	 * Evaluates the final options hash by running down the preference
+	 * hierarchy for each parameter.
+	 *
+	 * @param {Object} field definition in SceForm format
+	 * @param {Object} @see options from initialize()
+	 *
+	 * @return Array of options in Form format
+	 */
+	_getFieldOptions: function (sce_field, options) {
 		return {
-			model: new Backbone.Model(model),
-			schema: schema,
-			fieldsets: fieldsets
+			fieldTemplate: _.firstDefined(
+				sce_field.template,
+				options.fieldTemplate,
+				SceForm.Field.template
+			),
+			useChosen: _.firstDefined(
+				sce_field.useChosen,
+				options.useChosen,
+				SceForm.DEFAULTS.useChosen
+			),
+			chosenOptions: ( !this.useChosen ) ? undefined :
+				_.firstDefined(
+					sce_field.chosenOptions,
+					options.chosenOptions,
+					SceForm.DEFAULTS.chosenOptions
+				)
 		};
-	}
+	},
+	
+	/**
+	 * Creates a new object to represent a field with initial type settings
+	 *
+	 * @param @see options from initialize()
+	 * @param {Object} Field definition in SceForm format
+	 */
+	_makeNewFieldByType: function (options, sce_field) {
+		// Map SceForm::datatype to Form::Type
+		switch ( sce_field.datatype ) {
+			
+			//// Alphabetically sorted
+			case 'boolean':
+				return { type: 'Checkbox' };
+			case 'date':
+				return { type: 'Date' };
+			case 'int':
+				return { type: 'Text' };
+			/*case 'range': Handled separately because it requires 2 fields */
+			case 'single_select':
+				return {
+					type: options.useChosen ? 'Chosen' : 'Select',
+					chosenOptions: options.chosenOptions
+				};
+			case 'multi_select':
+				return {
+					type: options.useChosen ? 'Chosen' : 'Checkboxes',
+					chosenOptions: options.chosenOptions
+				};
+			case 'text':
+				return { type: 'Text' };
+			case 'textarea':
+				return { type: 'TextArea' };
+			case 'time':
+				return { type: 'DateTime' };
+			case 'uint':
+				return { type: 'Text' };
+		}
+		
+		// Force each spec type to be explicitly mapped
+		throw new Error(
+			"Unknown spec.datatype: '" + sce_field.datatype + "'"
+		);
+	},
 	
 }, {
 
 	// STATICS
 	
 	DEFAULTS: {
-		useChosen: false,
+		useChosen: true,
 		chosenOptions: { }
 	}
 	

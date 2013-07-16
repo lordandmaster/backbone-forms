@@ -518,5 +518,35 @@
     ok(spy.calledOnce);
     ok(spy.alwaysCalledWith(editor));
   });
+  
+  
+  
+  module('chosen display', {
+    setup: function() {
+		this.sinon = sinon.sandbox.create();
+
+		this.editor = new Editor({
+			value: 'Pam',
+			schema: schema
+		}).render();
+
+		$('body').append(this.editor.el);
+    },
+
+    teardown: function() {
+        this.sinon.restore();
+		
+		this.editor.remove();
+    }
+  });
+  
+  test('initDisplay applies chosen to select', function() {
+	var editor = this.editor;
+	
+	editor.initDisplay();
+	
+	equal( editor.$el.css('display'), 'none' );
+	equal( editor.$el.next().hasClass('chzn-container'), true );
+  });
 
 })(Backbone.Form, Backbone.Form.editors.Chosen);

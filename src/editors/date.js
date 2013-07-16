@@ -172,7 +172,7 @@ Form.editors.Date = Form.editors.Base.extend({
 }, {
   //STATICS
   template: _.template('\
-    <div>\
+    <div class="date_picker">\
       <select data-type="date"><%= dates %></select>\
       <select data-type="month"><%= months %></select>\
       <select data-type="year"><%= years %></select>\

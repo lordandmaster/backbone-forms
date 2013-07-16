@@ -159,7 +159,7 @@ Form.editors.DateTime = Form.editors.Base.extend({
 }, {
   //STATICS
   template: _.template('\
-    <div class="bbf-datetime">\
+    <div class="bbf-datetime date_time_picker">\
       <div class="bbf-date-container" data-date></div>\
       <select data-type="hour"><%= hours %></select>\
       :\

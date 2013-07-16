@@ -131,6 +131,60 @@ test('creates fieldsets - with "fieldsets" option', function() {
   same(schemaArg.fields, ['hi']);
 });
 
+test('Recurses on dependent fields', function() {
+	this.sinon.spy(SceForm.prototype, 'createField');
+  
+	var form = new SceForm({
+		specs: [
+			{ name: 'Set1', fields: [
+				{ name: 'name', datatype: 'text', dependent_fields: { field: [
+					{ name: 'first', datatype: 'text' },
+					{ name: 'age', datatype: 'int' }
+				]} }
+			]}
+		]
+	});
+	
+	same(form.createField.callCount, 3);
+	same(_.keys(form.fields), ['name', 'first', 'age']);
+	
+	var args = form.createField.args;
+	
+	same(args[0][0], 'name');
+	same(args[1][0], 'first');
+	same(args[2][0], 'age');
+});
+
+test('Recurses on nested categories', function() {
+	this.sinon.spy(SceForm.prototype, 'createFieldset');
+
+	var form = new SceForm({
+		specs: [
+			{
+				name: 'Set1',
+				fields: [
+					{ name: 'name', datatype: 'text' },
+					{ name: 'age', datatype: 'int' }
+				],
+				categories: { category: [
+					{ name: 'Set2', fields: [
+						{ name: 'hi', datatype: 'boolean' },
+						{ name: 'bye', datatype: 'boolean' }
+					]}
+				]}
+			},
+		]
+	});
+
+	same(form.createFieldset.callCount, 2);
+	same(form.fieldsets.length, 2);
+
+	var args = form.createFieldset.args;
+	
+	same(args[0][0].fields, ['name', 'age']);
+	same(args[1][0].fields, ['hi', 'bye']);
+});
+
 
 
 module('SceForm#createFieldset', {
