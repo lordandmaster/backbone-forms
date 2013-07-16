@@ -207,8 +207,8 @@ var SceForm = Form.extend({
 		
 		this._parseXmlNest( sce_field.options, 'option', function(sce_opt) {
 			options[ options.length ] = {
-				  val: sce_opt.value,
-				label: sce_opt.label
+				  val: sce_opt.option_value,
+				label: sce_opt.option_label
 			};
 		});
 		
@@ -272,7 +272,7 @@ var SceForm = Form.extend({
 			case 'textarea':
 				return { type: 'TextArea' };
 			case 'time':
-				return { type: 'DateTime' };
+				return { type: 'Text' }; // TODO: Time
 			case 'uint':
 				return { type: 'Text' };
 		}
