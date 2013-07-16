@@ -53,7 +53,7 @@ var SceForm = Form.extend({
 		if ( options.specs.categories && options.specs.categories.category ) {
 			options.specs = options.specs.categories.category;
 		}
-		if ( options.specs.length < 1 ) {
+		if ( options.specs instanceof Array && options.specs.length < 1 ) {
 			return {};
 		}
 		
@@ -65,8 +65,12 @@ var SceForm = Form.extend({
 			fieldsets: []  // In format expected by Form
 		};
 		
-		for ( var ii = 0; ii < sce_spec.length; ii++ ) {
-			this._parseFieldset( result, options, sce_spec[ii] );
+		if ( sce_spec instanceof Array ) {
+			for ( var ii = 0; ii < sce_spec.length; ii++ ) {
+				this._parseFieldset( result, options, sce_spec[ii] );
+			}
+		} else {
+			this._parseFieldset( result, options, sce_spec );
 		}
 		
 		result.model = new Backbone.Model(result.model);
@@ -84,24 +88,35 @@ var SceForm = Form.extend({
 	 */
 	_parseFieldset: function (result, options, spec) {
 		var fields        = [];
-		var sce_fieldset  = ( spec.fields.field )
-			? spec.fields.field : spec.fields;
 		
-		for ( var ii = 0; ii < sce_fieldset.length; ii++ ) {
-			this._parseField( fields, result, options, sce_fieldset[ii] );
+		if ( spec.fields ) {
+			var sce_fieldset  = ( spec.fields.field )
+				? spec.fields.field : spec.fields;
+			
+			if ( sce_fieldset instanceof Array ) {
+				for ( var ii = 0; ii < sce_fieldset.length; ii++ ) {
+					this._parseField( fields, result, options, sce_fieldset[ii] );
+				}
+			} else {
+				this._parseField( fields, result, options, sce_fieldset );
+			}
+			
+			result.fieldsets[ result.fieldsets.length ] = {
+				legend: spec.name,
+				help:   spec.description,
+				fields: fields
+			};
 		}
-		
-		result.fieldsets[ result.fieldsets.length ] = {
-			legend: spec.name,
-			help:   spec.description,
-			fields: fields
-		};
 		
 		// Recurse over nested categories
 		if ( spec.categories ) {
 			var sce_spec = spec.categories.category;
-			for ( var ii = 0; ii < sce_spec.length; ii++ ) {
-				this._parseFieldset( result, options, sce_spec[ii] );
+			if ( sce_spec instanceof Array ) {
+				for ( var ii = 0; ii < sce_spec.length; ii++ ) {
+					this._parseFieldset( result, options, sce_spec[ii] );
+				}
+			} else {
+				this._parseFieldset( result, options, sce_spec );
 			}
 		}
 	},
@@ -126,8 +141,13 @@ var SceForm = Form.extend({
 		// Recurse over any dependent fields
 		if ( sce_field.dependent_fields ) {
 			var sce_fieldset = sce_field.dependent_fields.field;
-			for ( var ii = 0; ii < sce_fieldset.length; ii++ ) {
-				this._parseField( fields, result, options, sce_fieldset[ii] );
+			
+			if ( sce_fieldset instanceof Array ) {
+				for ( var ii = 0; ii < sce_fieldset.length; ii++ ) {
+					this._parseField( fields, result, options, sce_fieldset[ii] );
+				}
+			} else {
+				this._parseField( fields, result, options, sce_fieldset );
 			}
 		}
 	},
