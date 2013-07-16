@@ -48,8 +48,10 @@ Form.Field = Backbone.View.extend({
     //Set defaults
     schema = _.extend({
       type: 'Text',
-      title: this.createTitle()
+      title: this.createTitle(),
     }, schema);
+	
+	if ( !schema.schemaAttrs ) schema.schemaAttrs = {};
 
 	this.typeName = schema.type;
     //Get the real constructor function i.e. if type is a string such as 'Text'
