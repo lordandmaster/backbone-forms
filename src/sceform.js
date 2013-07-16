@@ -90,15 +90,18 @@ var SceForm = Form.extend({
 		var fields        = [];
 		
 		if ( spec.fields ) {
-			var sce_fieldset  = ( spec.fields.field )
-				? spec.fields.field : spec.fields;
-			
-			if ( sce_fieldset instanceof Array ) {
-				for ( var ii = 0; ii < sce_fieldset.length; ii++ ) {
-					this._parseField( fields, result, options, sce_fieldset[ii] );
+			// Original Form formatted spec
+			if ( spec.fields instanceof Array && !spec.fields[0].field ) {
+				for ( var ii = 0; ii < spec.fields.length; ii++ ) {
+					this._parseField( fields, result, options, spec.fields[ii] );
 				}
-			} else {
-				this._parseField( fields, result, options, sce_fieldset );
+			}
+			// SceForm formatted spec
+			else {
+				this._parseXmlNest(
+					spec.fields, 'field', this._parseField,
+					[ fields, result, options ]
+				);
 			}
 			
 			result.fieldsets[ result.fieldsets.length ] = {
@@ -109,16 +112,9 @@ var SceForm = Form.extend({
 		}
 		
 		// Recurse over nested categories
-		if ( spec.categories ) {
-			var sce_spec = spec.categories.category;
-			if ( sce_spec instanceof Array ) {
-				for ( var ii = 0; ii < sce_spec.length; ii++ ) {
-					this._parseFieldset( result, options, sce_spec[ii] );
-				}
-			} else {
-				this._parseFieldset( result, options, sce_spec );
-			}
-		}
+		this._parseXmlNest(
+			spec.categories, 'category', this._parseFieldset, [result, options]
+		);
 	},
 	
 	/**
@@ -140,15 +136,10 @@ var SceForm = Form.extend({
 		
 		// Recurse over any dependent fields
 		if ( sce_field.dependent_fields ) {
-			var sce_fieldset = sce_field.dependent_fields.field;
-			
-			if ( sce_fieldset instanceof Array ) {
-				for ( var ii = 0; ii < sce_fieldset.length; ii++ ) {
-					this._parseField( fields, result, options, sce_fieldset[ii] );
-				}
-			} else {
-				this._parseField( fields, result, options, sce_fieldset );
-			}
+			this._parseXmlNest(
+				sce_field.dependent_fields, 'field', this._parseField,
+				[ fields, result, options ]
+			);
 		}
 	},
 	
@@ -213,13 +204,13 @@ var SceForm = Form.extend({
 		}
 		
 		var options = [];
-
-		for ( var oi = 0; oi < sce_field.options.option.length; oi++ ) {
+		
+		this._parseXmlNest( sce_field.options, 'option', function(sce_opt) {
 			options[ options.length ] = {
-				  val: sce_field.options.option[oi].value,
-				label: sce_field.options.option[oi].label
+				  val: sce_opt.value,
+				label: sce_opt.label
 			};
-		}
+		});
 		
 		return options;
 	},
@@ -290,6 +281,33 @@ var SceForm = Form.extend({
 		throw new Error(
 			"Unknown spec.datatype: '" + sce_field.datatype + "'"
 		);
+	},
+	
+	/**
+	 * Wrapper helper that performs another parse function, but does not
+	 * assume that the keys will be arrays. When length = 1, the key is not
+	 * passed as an array so this function catches that condition.
+	 *
+	 * @param {Object}   The container of nodes to be checked
+	 * @param {String}   The key within the container to check for an array
+	 * @param {Function} Parser method to call on each node
+	 * @param {Array}    Arguments to pass first to the parser method
+	 */
+	_parseXmlNest: function (nest, key, parser, args) {
+		if ( !nest ) {
+			return;
+		}
+		
+		nest = (nest instanceof Array) ? nest : [ nest ];
+		args = args || [];
+		
+		for ( var ii = 0; ii < nest.length; ii++ ) {
+			var inner_nest = nest[ii][key];
+			inner_nest = (inner_nest instanceof Array) ? inner_nest : [ inner_nest ];
+			for ( var jj = 0; jj < inner_nest.length; jj++ ) {
+				parser.apply( this, args.concat([inner_nest[jj]]) );
+			}
+		}
 	},
 	
 	setSubmitHandler: function (submit) {
