@@ -16,7 +16,7 @@ Form.editors.Chosen = Form.editors.Select.extend({
 			throw new Error('Chosen plugin not detected!');
 		}
 		
-		this.chosenOptions = options.chosenOptions;
+		this.chosenOptions = options.schema.schemaAttrs.chosenOptions;
 	},
 	
 	focus: function() {
