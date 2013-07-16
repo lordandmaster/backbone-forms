@@ -185,6 +185,29 @@ test('Recurses on nested categories', function() {
 	same(args[1][0].fields, ['hi', 'bye']);
 });
 
+test('Adds extra empty option', function() {
+	this.sinon.spy(SceForm.editors.Select.prototype, 'renderOptions');
+	
+	var form = new SceForm({
+		specs: [{ name: 'C', fields: [
+			{ name: 'a', datatype: 'single_select', options: [] },
+			{ name: 'b', datatype: 'multi_select', options: [] },
+			{ name: 'c', datatype: 'single_select', options: [], addEmptySelectOption: false }
+		]}],
+		addEmptySelectOption: true
+	});
+	
+	var getOpts = function(fi) {
+		return form.fields[fi].options.schema.options;
+	};
+	
+	var empty_opt = { val: null, label: '' };
+	
+	same( getOpts('a'), [empty_opt] );
+	same( getOpts('b'), [empty_opt] );
+	same( getOpts('c'), [] );
+});
+
 
 
 module('SceForm#createFieldset', {

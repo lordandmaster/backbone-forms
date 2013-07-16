@@ -35,6 +35,8 @@ var SceForm = Form.extend({
 		
 		SceForm.__super__.initialize.call(this, form_options);
 		
+		this.setSubmitHandler( options.submit );
+		
 	},
 	
 	/**
@@ -167,6 +169,9 @@ var SceForm = Form.extend({
 		
 		if ( sce_field.options ) {
 			field.options = this._parseSelectOptions( sce_field );
+			if ( options.addEmptySelectOption ) {
+				field.options.unshift({ val: null, label: ''});
+			}
 		}
 		
 		// Attach to schema, model, and structure
@@ -209,24 +214,18 @@ var SceForm = Form.extend({
 	 * @return Array of options in Form format
 	 */
 	_getFieldOptions: function (sce_field, options) {
-		return {
-			fieldTemplate: _.firstDefined(
-				sce_field.template,
-				options.fieldTemplate,
-				SceForm.Field.template
-			),
-			useChosen: _.firstDefined(
-				sce_field.useChosen,
-				options.useChosen,
-				SceForm.DEFAULTS.useChosen
-			),
-			chosenOptions: ( !this.useChosen ) ? undefined :
-				_.firstDefined(
-					sce_field.chosenOptions,
-					options.chosenOptions,
-					SceForm.DEFAULTS.chosenOptions
-				)
-		};
+		var result = _.pickDefaults(
+			['addEmptySelectOption', 'useChosen', 'chosenOptions'],
+			sce_field, options, SceForm.DEFAULTS
+		);
+		
+		result.fieldTemplate =_.firstDefined(
+			sce_field.template,
+			options.fieldTemplate,
+			SceForm.Field.template
+		);
+		
+		return result;
 	},
 	
 	/**
@@ -273,11 +272,22 @@ var SceForm = Form.extend({
 		);
 	},
 	
+	setSubmitHandler: function (submit) {
+		if ( submit == undefined ) {
+			return;
+		}
+		
+		this.$el.submit(function() {
+			return submit( this.getValue() ).call(this);
+		}.bind(this));
+	}
+	
 }, {
 
 	// STATICS
 	
 	DEFAULTS: {
+		addEmptySelectOption: false,
 		useChosen: true,
 		chosenOptions: { }
 	}

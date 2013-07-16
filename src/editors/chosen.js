@@ -17,7 +17,6 @@ Form.editors.Chosen = Form.editors.Select.extend({
 		}
 		
 		this.chosenOptions = options.chosenOptions;
-		// this.$el.chosen( options.chosenOptions );
 	},
 	
 	focus: function() {
@@ -35,6 +34,18 @@ Form.editors.Chosen = Form.editors.Select.extend({
 		
 		// See comment in focus()
 		this.$el.triggerHandler('blur');
+	},
+	
+	render: function() {
+		Form.editors.Chosen.__super__.render.call(this);
+		
+		// TODO: Should not use schemaAttrs for this check
+		var attrs = this.schema.schemaAttrs;
+		if ( attrs && attrs.datatype == 'multi_select' ) {
+			this.el.multiple = 'multiple';
+		}
+		
+		return this;
 	},
 	
 	initDisplay: function() {
