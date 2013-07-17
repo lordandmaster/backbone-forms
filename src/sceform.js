@@ -185,8 +185,8 @@ var SceForm = Form.extend({
 			}
 		}
 		
-		if ( sce_field.current_value instanceof Array
-			&& sce_field.current_value.length < 1 )
+		if ( sce_field.current_value instanceof Object
+			&& !(sce_field.current_value instanceof Array) )
 		{
 			sce_field.current_value = null;
 		}
