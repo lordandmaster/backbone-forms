@@ -115,6 +115,9 @@ var SceForm = Form.extend({
 		this._parseXmlNest(
 			spec.categories, 'category', this._parseFieldset, [result, options]
 		);
+		this._parseXmlNest(
+			spec.category, null, this._parseFieldset, [result, options]
+		);
 	},
 	
 	/**
@@ -306,10 +309,14 @@ var SceForm = Form.extend({
 		args = args || [];
 		
 		for ( var ii = 0; ii < nest.length; ii++ ) {
-			var inner_nest = nest[ii][key];
-			inner_nest = (inner_nest instanceof Array) ? inner_nest : [ inner_nest ];
-			for ( var jj = 0; jj < inner_nest.length; jj++ ) {
-				parser.apply( this, args.concat([inner_nest[jj]]) );
+			if ( !key ) {
+				parser.apply( this, args.concat([ nest[ii] ]) );
+			} else {
+				var inner_nest = nest[ii][key];
+				inner_nest = (inner_nest instanceof Array) ? inner_nest : [ inner_nest ];
+				for ( var jj = 0; jj < inner_nest.length; jj++ ) {
+					parser.apply( this, args.concat([ inner_nest[jj] ]) );
+				}
 			}
 		}
 	},

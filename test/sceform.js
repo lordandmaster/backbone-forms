@@ -166,12 +166,12 @@ test('Recurses on nested categories', function() {
 					{ name: 'name', datatype: 'text' },
 					{ name: 'age', datatype: 'int' }
 				],
-				categories: { category: [
+				category: [
 					{ name: 'Set2', fields: [
 						{ name: 'hi', datatype: 'boolean' },
 						{ name: 'bye', datatype: 'boolean' }
 					]}
-				]}
+				]
 			},
 		]
 	});
