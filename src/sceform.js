@@ -185,9 +185,7 @@ var SceForm = Form.extend({
 			}
 		}
 		
-		if ( sce_field.current_value instanceof Object
-			&& !(sce_field.current_value instanceof Array) )
-		{
+		if ( $.isEmptyObject(sce_field.current_value) ) {
 			sce_field.current_value = null;
 		}
 		
