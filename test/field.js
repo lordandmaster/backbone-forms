@@ -263,7 +263,7 @@ test('with data-editor and data-error placeholders', function() {
     template: _.template('<div><%= title %><b data-editor></b><i data-error></i></div>', null, Form.templateSettings)
   }).render();
 
-  same(field.$el.html(), 'Title<b data-editor=""><input class="title"></b><i data-error=""></i>');
+  same(cleanse(field.$el.html()), 'title<b data-editor=><input class=title></b><i data-error=></i>');
 });
 
 test('with replace placeholder', function() {
@@ -273,7 +273,7 @@ test('with replace placeholder', function() {
 		template: _.template('<div><span data-editor replace></span></div>', null, Form.templateSettings)
 	}).render();
 	
-	same(field.$el.html(), '<input class="title">');
+	same(cleanse(field.$el.html()), '<input class=title>');
 });
 
 

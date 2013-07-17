@@ -52,21 +52,24 @@ test('uses fieldset and field classes stored on form class', function() {
 });
 
 test('sets selectedFields - with options.fields', function() {
-  var options = {
-    fields: ['foo', 'bar']
-  };
+	var options = [{ category: { name: 'Set1', content: [{ fields: [
+		{ name: 'foo', datatype: 'text' },
+		{ name: 'bar', datatype: 'text' },
+	]}] }}];
 
-  var form = new SceForm(options);
+	var form = new SceForm({
+		specs: options
+	});
 
-  same(form.selectedFields, options.fields);
+	same(form.selectedFields, [ 'foo', 'bar' ]);
 });
 
 test('sets selectedFields - defaults to using all fields in schema', function() {
   var form = new SceForm({
-    specs: [{ name: 'Set', fields: [
+    specs: [{ category: { name: 'Set', content: [{ fields: [
 		{ name: 'name', datatype: 'text' },
 		{ name: 'age', datatype: 'int' }
-	]}]
+	]}] }}]
   });
 
   same(form.selectedFields, ['name', 'age']);
@@ -76,10 +79,10 @@ test('creates fields', function() {
   this.sinon.spy(SceForm.prototype, 'createField');
 
   var form = new SceForm({
-    specs: [{ name: 'Set', fields: [
+    specs: [{ category: { name: 'Set', content: [{ fields: [
 		{ name: 'name', datatype: 'text' },
 		{ name: 'age', datatype: 'int' }
-	]}]
+	]}] }}]
   });
 
   same(form.createField.callCount, 2);
@@ -105,15 +108,15 @@ test('creates fieldsets - with "fieldsets" option', function() {
   this.sinon.spy(SceForm.prototype, 'createFieldset');
 
   var form = new SceForm({
-    specs: [
-		{ name: 'Set1', fields: [
+    specs: [{ category: [
+		{ name: 'Set1', content: [{ fields: [
 			{ name: 'name', datatype: 'text' },
 			{ name: 'age', datatype: 'int' }
-		]},
-		{ name: 'Set2', fields: [
+		]}] },
+		{ name: 'Set2', content: [{ fields: [
 			{ name: 'hi', datatype: 'boolean' }
-		]}
-	]
+		]}] }
+	]}]
   });
 
   same(form.createFieldset.callCount, 2);
@@ -135,14 +138,14 @@ test('Recurses on dependent fields', function() {
 	this.sinon.spy(SceForm.prototype, 'createField');
   
 	var form = new SceForm({
-		specs: [
-			{ name: 'Set1', fields: [
+		specs: [{ category: 
+			{ name: 'Set1', content: [{ fields: [
 				{ name: 'name', datatype: 'text', dependent_fields: { field: [
 					{ name: 'first', datatype: 'text' },
 					{ name: 'age', datatype: 'int' }
 				]} }
-			]}
-		]
+			]}] }
+		}]
 	});
 	
 	same(form.createField.callCount, 3);
@@ -159,21 +162,23 @@ test('Recurses on nested categories', function() {
 	this.sinon.spy(SceForm.prototype, 'createFieldset');
 
 	var form = new SceForm({
-		specs: [
+		specs: [{ category:
 			{
 				name: 'Set1',
-				fields: [
-					{ name: 'name', datatype: 'text' },
-					{ name: 'age', datatype: 'int' }
-				],
-				category: [
-					{ name: 'Set2', fields: [
-						{ name: 'hi', datatype: 'boolean' },
-						{ name: 'bye', datatype: 'boolean' }
-					]}
+				content: [
+					{fields: [
+						{ name: 'name', datatype: 'text' },
+						{ name: 'age', datatype: 'int' }
+					]},
+					{category:
+						{ name: 'Set2', content: [{fields: [
+							{ name: 'hi', datatype: 'boolean' },
+							{ name: 'bye', datatype: 'boolean' }
+						]}]}
+					}
 				]
 			},
-		]
+		}]
 	});
 
 	same(form.createFieldset.callCount, 2);
@@ -189,11 +194,11 @@ test('Adds extra empty option', function() {
 	this.sinon.spy(SceForm.editors.Select.prototype, 'renderOptions');
 	
 	var form = new SceForm({
-		specs: [{ name: 'C', fields: [
+		specs: [{ category: { name: 'C', content: [{ fields: [
 			{ name: 'a', datatype: 'single_select', options: [] },
 			{ name: 'b', datatype: 'multi_select', options: [] },
 			{ name: 'c', datatype: 'single_select', options: [], addEmptySelectOption: false }
-		]}],
+		]}] }}],
 		addEmptySelectOption: true
 	});
 	
@@ -224,10 +229,10 @@ test('creates a new instance of the Fieldset defined on the form', function() {
   var MockFieldset = Backbone.View.extend();
   
   var form = new SceForm({
-    specs: [{ name: 'Set', fields: [
+    specs: [{ category: { name: 'Set', content: [{ fields: [
 		{ name: 'name', datatype: 'text' },
 		{ name: 'age', datatype: 'int' }
-	]}],
+	]}] }}],
     Fieldset: MockFieldset
   });
 

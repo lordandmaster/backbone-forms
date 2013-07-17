@@ -449,16 +449,16 @@ test('with data-editors="*" placeholder, on inner element', function() {
     template: _.template('<div><b data-editors="*"></b></div>')
   }).render();
 
-  same(form.$el.html(), '<b data-editors="*"><input class="name"><input class="password"></b>');
+  same(cleanse(form.$el.html()), '<b data-editors=*><input class=name><input class=password></b>');
 });
 
 test('with data-editors="x,y" placeholder, on outermost element', function() {
   var form = new Form({
     schema: { name: 'Text', password: 'Password' },
-    template: _.template('<b data-editors="name,password"></b>')
+    template: _.template('<b data-editors=name,password></b>')
   }).render();
 
-  same(form.$el.html(), '<input class="name"><input class="password">');
+  same(cleanse(form.$el.html()), '<input class=name><input class=password>');
 });
 
 test('with data-fields="*" placeholder, on inner element', function() {
@@ -467,7 +467,7 @@ test('with data-fields="*" placeholder, on inner element', function() {
     template: _.template('<div><b data-fields="*"></b></div>')
   }).render();
 
-  same(form.$el.html(), '<b data-fields="*"><field class="name"></field><field class="password"></field></b>');
+  same(cleanse(form.$el.html()), '<b data-fields=*><field class=name></field><field class=password></field></b>');
 });
 
 test('with data-fields="x,y" placeholder, on outermost element', function() {
@@ -476,7 +476,7 @@ test('with data-fields="x,y" placeholder, on outermost element', function() {
     template: _.template('<b data-fields="name,password"></b>')
   }).render();
 
-  same(form.$el.html(), '<field class="name"></field><field class="password"></field>');
+  same(cleanse(form.$el.html()), '<field class=name></field><field class=password></field>');
 });
 
 test('with data-fieldsets placeholder, on inner element', function() {
@@ -485,7 +485,7 @@ test('with data-fieldsets placeholder, on inner element', function() {
     template: _.template('<div><b data-fieldsets></b></div>')
   }).render();
 
-  same(form.$el.html(), '<b data-fieldsets=""><fieldset></fieldset></b>');
+  same(cleanse(form.$el.html()), '<b data-fieldsets=><fieldset></fieldset></b>');
 });
 
 test('with data-fieldsets placeholder, on outermost element', function() {
@@ -494,7 +494,7 @@ test('with data-fieldsets placeholder, on outermost element', function() {
     template: _.template('<b data-fieldsets></b>')
   }).render();
 
-  same(form.$el.html(), '<fieldset></fieldset>');
+  same(cleanse(form.$el.html()), '<fieldset></fieldset>');
 });
 
 

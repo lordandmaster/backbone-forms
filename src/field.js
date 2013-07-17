@@ -48,7 +48,7 @@ Form.Field = Backbone.View.extend({
     //Set defaults
     schema = _.extend({
       type: 'Text',
-      title: this.createTitle(),
+      title: this.createTitle()
     }, schema);
 	
 	if ( !schema.schemaAttrs ) schema.schemaAttrs = {};

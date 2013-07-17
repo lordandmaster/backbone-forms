@@ -50,14 +50,16 @@ var SceForm = Form.extend({
 		if ( !options || !options.specs ) {
 			return {};
 		}
-		if ( options.specs.categories && options.specs.categories.category ) {
-			options.specs = options.specs.categories.category;
+		
+		if ( options.specs.categories && options.specs.categories.content ) {
+			options.specs = options.specs.categories.content;
+		} else if ( options.specs.content ) {
+			options.specs = options.specs.content;
 		}
+		
 		if ( options.specs instanceof Array && options.specs.length < 1 ) {
 			return {};
 		}
-		
-		var sce_spec = options.specs;
 		
 		var result = {
 			model: {},     // Passed into Backbone.Model constructor
@@ -65,16 +67,74 @@ var SceForm = Form.extend({
 			fieldsets: []  // In format expected by Form
 		};
 		
-		if ( sce_spec instanceof Array ) {
-			for ( var ii = 0; ii < sce_spec.length; ii++ ) {
-				this._parseFieldset( result, options, sce_spec[ii] );
-			}
-		} else {
-			this._parseFieldset( result, options, sce_spec );
-		}
+		this._parseCatContent( result, options, null, options.specs );
 		
 		result.model = new Backbone.Model(result.model);
 		return result;
+	},
+	
+	/**
+	 * Parses a content block and calls the appropriate helper parser for
+	 * the type of content. Currently supported block types are 'category'
+	 * and 'fields'
+	 *
+	 * @param {Object} Reference to container for fieldset
+	 * @param {Object} @see options from initialize()
+	 * @param [Array]  Reference to container for fields
+	 * @param {Object} Content definition in SceForm format
+	 */
+	_parseCatContent: function (result, options, fields, spec) {
+		if ( !spec ) {
+			return;
+		}
+		
+		for ( var ii = 0; ii < spec.length; ii ++ ) {
+			if ( spec[ii].fields ) {
+				if ( fields == null ) {
+					throw new Error( 'Not expecting a fields group here' );
+				}
+				this._parseXmlNest(
+					spec[ii].fields, 'field', this._parseField,
+					[ fields, result, options ]
+				);
+			} else if ( spec[ii].category ) {
+				this._parseXmlNest(
+					spec[ii].category, null, this._parseFieldset,
+					[ result, options ]
+				);
+			}
+		}
+	},
+	
+	/**
+	 * Wrapper helper that performs another parse function, but does not
+	 * assume that the keys will be arrays. When length = 1, the key is not
+	 * passed as an array so this function catches that condition.
+	 *
+	 * @param {Object}   The container of nodes to be checked
+	 * @param {String}   The key within the container to check for an array
+	 * @param {Function} Parser method to call on each node
+	 * @param {Array}    Arguments to pass first to the parser method
+	 */
+	_parseXmlNest: function (nest, key, parser, args) {
+		if ( !nest ) {
+			return;
+		}
+		
+		nest = (nest instanceof Array) ? nest : [ nest ];
+		args = args || [];
+		
+		for ( var ii = 0; ii < nest.length; ii++ ) {
+			if ( !key || !nest[ii][key] ) {
+				parser.apply( this, args.concat([ nest[ii] ]) );
+			} else {
+				var inner_nest = nest[ii][key];
+				inner_nest = (inner_nest instanceof Array) ? inner_nest : [ inner_nest ];
+				for ( var jj = 0; jj < inner_nest.length; jj++ ) {
+					parser.apply( this, args.concat([ inner_nest[jj] ]) );
+				}
+			}
+		}
 	},
 	
 	/**
@@ -88,36 +148,14 @@ var SceForm = Form.extend({
 	 */
 	_parseFieldset: function (result, options, spec) {
 		var fields        = [];
-		
-		if ( spec.fields ) {
-			// Original Form formatted spec
-			if ( spec.fields instanceof Array && !spec.fields[0].field ) {
-				for ( var ii = 0; ii < spec.fields.length; ii++ ) {
-					this._parseField( fields, result, options, spec.fields[ii] );
-				}
-			}
-			// SceForm formatted spec
-			else {
-				this._parseXmlNest(
-					spec.fields, 'field', this._parseField,
-					[ fields, result, options ]
-				);
-			}
 			
-			result.fieldsets[ result.fieldsets.length ] = {
-				legend: spec.name,
-				help:   spec.description,
-				fields: fields
-			};
-		}
+		result.fieldsets[ result.fieldsets.length ] = {
+			legend: spec.name,
+			help:   spec.description,
+			fields: fields
+		};
 		
-		// Recurse over nested categories
-		this._parseXmlNest(
-			spec.categories, 'category', this._parseFieldset, [result, options]
-		);
-		this._parseXmlNest(
-			spec.category, null, this._parseFieldset, [result, options]
-		);
+		this._parseCatContent( result, options, fields, spec.content );
 	},
 	
 	/**
@@ -288,37 +326,6 @@ var SceForm = Form.extend({
 		throw new Error(
 			"Unknown spec.datatype: '" + sce_field.datatype + "'"
 		);
-	},
-	
-	/**
-	 * Wrapper helper that performs another parse function, but does not
-	 * assume that the keys will be arrays. When length = 1, the key is not
-	 * passed as an array so this function catches that condition.
-	 *
-	 * @param {Object}   The container of nodes to be checked
-	 * @param {String}   The key within the container to check for an array
-	 * @param {Function} Parser method to call on each node
-	 * @param {Array}    Arguments to pass first to the parser method
-	 */
-	_parseXmlNest: function (nest, key, parser, args) {
-		if ( !nest ) {
-			return;
-		}
-		
-		nest = (nest instanceof Array) ? nest : [ nest ];
-		args = args || [];
-		
-		for ( var ii = 0; ii < nest.length; ii++ ) {
-			if ( !key ) {
-				parser.apply( this, args.concat([ nest[ii] ]) );
-			} else {
-				var inner_nest = nest[ii][key];
-				inner_nest = (inner_nest instanceof Array) ? inner_nest : [ inner_nest ];
-				for ( var jj = 0; jj < inner_nest.length; jj++ ) {
-					parser.apply( this, args.concat([ inner_nest[jj] ]) );
-				}
-			}
-		}
 	},
 	
 	setSubmitHandler: function (submit) {
