@@ -16,6 +16,8 @@ Form.Fieldset = Backbone.View.extend({
 	 * @param {Object} options.fields           Form fields
 	 */
 	initialize: function(options) {
+		var self = this;
+		
 		options = options || {};
 
 		//Create the full fieldset schema, merging defaults etc.
@@ -29,24 +31,42 @@ Form.Fieldset = Backbone.View.extend({
 		
 		// Store nested fieldsets
 		if ( content ) {
-			for ( var ii = 0; ii < content.length; ii++ ) {
-				if ( content[ii].type == 'fields' ) {
-					var fields = _.pick(options.fields, content[ii].fields);
-					for ( var key in fields ) {
-						this.content[ this.content.length ] = fields[key];
-					}
+			_.each(content, function (item) {
+				if ( item.type == 'fields' ) {
+					self._registerFields( item.fields, options.fields );
 				}
-				else if ( content[ii].type == 'fieldset' ) {
-					this.content[ this.content.length ] = new Form.Fieldset({
-						schema: content[ii],
+				else if ( item.type == 'fieldset' ) {
+					self.content[ self.content.length ] = new Form.Fieldset({
+						schema: item,
 						fields: options.fields
 					});
 				}
-			}
+			});
 		}
 
 		//Override defaults
 		this.template = options.template || this.constructor.template;
+	},
+	
+	_registerFields: function (fields, fields_ref) {
+		_.each(fields, function (field) {
+			if ( field instanceof Array ) {
+				this._registerDependants( field, fields_ref );
+			} else {
+				this.content[ this.content.length ] = fields_ref[ field ];
+			}
+		}, this);
+	},
+	
+	_registerDependants: function (fieldsets, fields_ref) {
+		var dependants = this.content[ this.content.length - 1 ].dependants;
+		
+		_.each(fieldsets, function (fieldset) {
+			dependants[ dependants.length ] = new Form.Fieldset({
+				schema: fieldset,
+				fields: fields_ref
+			});
+		});
 	},
 
   /**

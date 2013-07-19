@@ -309,7 +309,12 @@ These use the individual source files. Use this while developing
 					},
 					{fields: { field: [
 						{ name: 'junk2', datatype: 'text' },
-						{ name: 'junk3', datatype: 'text' }
+						{ name: 'junk3', datatype: 'text',
+							dependent_elements: { field: [
+								{ name: 'dep1', datatype: 'boolean' },
+								{ name: 'dep2', datatype: 'int' }
+							]}
+						}
 					]}},
 					{category:
 						{ name: 'inner 2', content: [{fields: { field:

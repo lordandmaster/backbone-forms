@@ -12,8 +12,6 @@
 
 var SceForm = Form.extend({
 	
-	_submitView: null,
-	
 	/**
 	 * Constructor
 	 * 
@@ -34,6 +32,7 @@ var SceForm = Form.extend({
 		var spec = this.mapSceSpecsToForm( options );
 		
 		var form_options = _.defaults( spec, options );
+		this._submitView = null;
 		
 		if ( options.submit ) {
 			if ( !form_options.fieldsets ) {
@@ -236,10 +235,12 @@ var SceForm = Form.extend({
 		
 		// Recurse over any dependent fields
 		if ( sce_field.dependent_elements ) {
-			this._parseXmlNest(
-				sce_field.dependent_elements, 'field', this._parseField,
-				[ fields, result, options ]
-			);
+			var fieldset = { content: [] };
+			fields[ fields.length ] = fieldset.content;
+			this._parseFieldset(result, options, fieldset, {
+				name: '',
+				content: [{ fields: { field: sce_field.dependent_elements.field } }]
+			});
 		}
 	},
 	

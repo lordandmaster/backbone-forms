@@ -30,6 +30,7 @@ Form.Field = Backbone.View.extend({
     //Override defaults
     this.template = options.template || schema.template || this.constructor.template;
     this.errorClassName = options.errorClassName || this.constructor.errorClassName;
+	this.dependants = [];
 
     //Create editor
     this.editor = this.createEditor();
@@ -141,39 +142,43 @@ Form.Field = Backbone.View.extend({
     };
   },
 
-  /**
-   * Render the field and editor
-   *
-   * @return {Field} self
-   */
-  render: function() {
-    var schema = this.schema,
-        editor = this.editor;
+	/**
+	 * Render the field and editor
+	 *
+	 * @return {Field} self
+	 */
+	render: function() {
+		var schema = this.schema,
+		editor = this.editor;
 
-    //Render field
-    var $field = $($.trim(this.template(_.result(this, 'templateData'))));
+		//Render field
+		var $field = $($.trim(this.template(_.result(this, 'templateData'))));
 
-    if (schema.fieldClass) $field.addClass(schema.fieldClass);
-    if (schema.fieldAttrs) $field.attr(schema.fieldAttrs);
+		if (schema.fieldClass) $field.addClass(schema.fieldClass);
+		if (schema.fieldAttrs) $field.attr(schema.fieldAttrs);
 
-    //Render editor
-    $field.find('[data-editor]').add($field).each(function(i, el) {
-      var $container = $(el),
-          selection = $container.attr('data-editor');
+		//Render editor
+		$field.find('[data-editor]').add($field).each(function(i, el) {
+			var $container = $(el),
+			selection = $container.attr('data-editor');
 
-      if (_.isUndefined(selection)) return;
+			if (_.isUndefined(selection)) return;
 
-      if ( $container.attr('replace') === undefined ) {
-		$container.append(editor.render().el);
-	  } else {
-		$container.replaceWith( editor.render().el );
-	  }
-    });
+			if ( $container.attr('replace') === undefined ) {
+				$container.append(editor.render().el);
+			} else {
+				$container.replaceWith( editor.render().el );
+			}
+		});
 
-    this.setElement($field);
+		_.each(this.dependants, function(fieldset) {
+			$field.append( fieldset.render().el );
+		});
+		
+		this.setElement($field);
 
-    return this;
-  },
+		return this;
+	},
 
   /**
    * Check the validity of the field

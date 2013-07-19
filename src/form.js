@@ -5,9 +5,6 @@
 
 var Form = Backbone.View.extend({
 
-	_chosen_editors: [],
-	_submitHandler: null,
-
 	/**
 	 * Constructor
 	 * 
@@ -25,6 +22,9 @@ var Form = Backbone.View.extend({
 		var self = this;
 
 		options = options || {};
+		
+		this._chosen_editors = [];
+		this._submitHandler = null;
 
 		//Find the schema to use
 		var schema = this.schema = (function() {
