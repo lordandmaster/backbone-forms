@@ -105,7 +105,8 @@ test('creates fields', function() {
 });
 
 test('creates fieldsets - with "fieldsets" option', function() {
-  this.sinon.spy(SceForm.prototype, 'createFieldset');
+  this.sinon.spy(SceForm.Fieldset.prototype, 'initialize');
+  var newFieldset = SceForm.Fieldset.prototype.initialize;
 
   var form = new SceForm({
     specs: [{ category: [
@@ -119,19 +120,14 @@ test('creates fieldsets - with "fieldsets" option', function() {
 	]}]
   });
 
-  same(form.createFieldset.callCount, 2);
+  same(newFieldset.callCount, 2);
   same(form.fieldsets.length, 2);
 
   //Check createFieldset() was called correctly
-  var args = form.createFieldset.args[0],
-      schemaArg = args[0];
+  var args = newFieldset.args;
 
-  same(schemaArg.fields, ['name', 'age']);
-
-  var args = form.createFieldset.args[1],
-      schemaArg = args[0];
-
-  same(schemaArg.fields, ['hi']);
+  same(args[0][0].schema.content[0].fields, ['name', 'age']);
+  same(args[1][0].schema.content[0].fields, ['hi']);
 });
 
 test('Recurses on dependent fields', function() {

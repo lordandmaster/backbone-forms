@@ -1061,13 +1061,14 @@ Form.Fieldset = Backbone.View.extend({
 		this.content = [];
 		var content = options.schema.content;
 		
+		// Store nested fieldsets
 		if ( content ) {
 			for ( var ii = 0; ii < content.length; ii++ ) {
 				if ( content[ii].type == 'fields' ) {
 					var fields = _.pick(options.fields, content[ii].fields);
 					for ( var key in fields ) {
 						this.content[ this.content.length ] = fields[key];
-					} 
+					}
 				}
 				else if ( content[ii].type == 'fieldset' ) {
 					this.content[ this.content.length ] = new Form.Fieldset({
@@ -1146,8 +1147,27 @@ Form.Fieldset = Backbone.View.extend({
 			_.each(fields, function(field) {
 				$container.append(field.render().el);
 			});
+			
+			var group_broken = false;
+			var last = $container;
+			
+			// Render nested fieldsets and fields
 			_.each(content, function(item) {
-				$container.append(item.render().el);
+				var $el = item.render().$el;
+				
+				if ( item.fields ) {
+					$el.insertAfter( last );
+					last = $el;
+					group_broken = true;
+				} else {
+					if ( group_broken ) {
+						var newbox = $($container[0].cloneNode());
+						newbox.insertAfter(last);
+						last = $container = newbox;
+						group_broken = false;
+					}
+					$container.append( $el );
+				}
 			});
 		});
 
@@ -1170,14 +1190,14 @@ Form.Fieldset = Backbone.View.extend({
 }, {
   //STATICS
 
-  template: _.template('\
-    <fieldset>\
-      <% if (legend) { %>\
-        <legend><%= legend %></legend>\
-      <% } %>\
+	template: _.template('\
+		<fieldset>\
+			<% if (legend) { %>\
+				<legend><%= legend %></legend>\
+			<% } %>\
 			<ol data-fields></ol> \
-    </fieldset>\
-  ', null, Form.templateSettings)
+		</fieldset>\
+	', null, Form.templateSettings)
 
 });
 

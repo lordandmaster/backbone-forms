@@ -197,11 +197,11 @@ These use the individual source files. Use this while developing
 				{ legend: 'Nested editors', fields: ['object', 'nestedModel'] }
 			]
 		});
+
+		$('#uiTest #formContainer').html(form.render().el);
 		console.log('---- BASEFORM');
 		
 		window.form = form;
-
-		$('#uiTest #formContainer').html(form.render().el);
 
 		$('#uiTest label').click(function() {
 			var name = $(this).attr('for'),
@@ -301,9 +301,19 @@ These use the individual source files. Use this while developing
 			{
 				name: 'category weird',
 				content: [
+					{fields: { field: [{ name: 'junk1', datatype: 'text' }] }},
 					{category:
 						{ name: 'inner 1', content: [{fields: { field:
 							{ name: 'age2', datatype: 'int', label: 'How old' }
+						}}]}
+					},
+					{fields: { field: [
+						{ name: 'junk2', datatype: 'text' },
+						{ name: 'junk3', datatype: 'text' }
+					]}},
+					{category:
+						{ name: 'inner 2', content: [{fields: { field:
+							{name: 'age3', datatype: 'int', label: 'How oldddd' }
 						}}]}
 					}
 				]
@@ -318,11 +328,11 @@ These use the individual source files. Use this while developing
 				html: '<input type="submit"/>'
 			}
 		});
+		
+		form.renderTo( '#sceformContainer' );
 		console.log('---- SCEFORM');
 		
 		window.sceform = form;
-		
-		form.renderTo( '#sceformContainer' );
 
 		$('#uiTest2 label').click(function() {
 			var name = $(this).attr('for'),
