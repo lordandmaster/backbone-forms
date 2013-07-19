@@ -45,9 +45,6 @@ _.mixin({
 
 var Form = Backbone.View.extend({
 
-	_chosen_editors: [],
-	_submitHandler: null,
-
 	/**
 	 * Constructor
 	 * 
@@ -65,6 +62,10 @@ var Form = Backbone.View.extend({
 		var self = this;
 
 		options = options || {};
+		
+		this._chosen_editors = [];
+		this._submitHandler = null;
+		this.dependencyClass = options.dependencyClass || '';
 
 		//Find the schema to use
 		var schema = this.schema = (function() {
@@ -118,21 +119,22 @@ var Form = Backbone.View.extend({
 		this.setSubmitHandler( options.onSubmit );
 	},
 
-  /**
-   * Creates a Fieldset instance
-   *
-   * @param {String[]|Object[]} schema       Fieldset schema
-   *
-   * @return {Form.Fieldset}
-   */
-  createFieldset: function(schema) {
-    var options = {
-      schema: schema,
-      fields: this.fields
-    };
+	/**
+	* Creates a Fieldset instance
+	*
+	* @param {String[]|Object[]} schema       Fieldset schema
+	*
+	* @return {Form.Fieldset}
+	*/
+	createFieldset: function(schema) {
+		var options = {
+			dependencyClass: this.dependencyClass,
+			schema: schema,
+			fields: this.fields
+		};
 
-    return new this.Fieldset(options, this);
-  },
+		return new this.Fieldset(options, this);
+	},
 
   /**
    * Creates a Field instance
@@ -543,8 +545,6 @@ var Form = Backbone.View.extend({
 
 var SceForm = Form.extend({
 	
-	_submitView: null,
-	
 	/**
 	 * Constructor
 	 * 
@@ -565,6 +565,7 @@ var SceForm = Form.extend({
 		var spec = this.mapSceSpecsToForm( options );
 		
 		var form_options = _.defaults( spec, options );
+		this._submitView = null;
 		
 		if ( options.submit ) {
 			if ( !form_options.fieldsets ) {
@@ -767,10 +768,12 @@ var SceForm = Form.extend({
 		
 		// Recurse over any dependent fields
 		if ( sce_field.dependent_elements ) {
-			this._parseXmlNest(
-				sce_field.dependent_elements, 'field', this._parseField,
-				[ fields, result, options ]
-			);
+			var fieldset = { content: [] };
+			fields[ fields.length ] = fieldset.content;
+			this._parseFieldset(result, options, fieldset, {
+				name: '',
+				content: [{ fields: { field: sce_field.dependent_elements.field } }]
+			});
 		}
 	},
 	
@@ -1050,6 +1053,8 @@ Form.Fieldset = Backbone.View.extend({
 	 * @param {Object} options.fields           Form fields
 	 */
 	initialize: function(options) {
+		var self = this;
+		
 		options = options || {};
 
 		//Create the full fieldset schema, merging defaults etc.
@@ -1057,30 +1062,54 @@ Form.Fieldset = Backbone.View.extend({
 
 		//Store the fields for this fieldset
 		this.fields = _.pick(options.fields, schema.fields);
+		
+		this.dependencyClass = options.dependencyClass;
+		this.cssClass = options.cssClass || '';
 
 		this.content = [];
 		var content = options.schema.content;
 		
 		// Store nested fieldsets
 		if ( content ) {
-			for ( var ii = 0; ii < content.length; ii++ ) {
-				if ( content[ii].type == 'fields' ) {
-					var fields = _.pick(options.fields, content[ii].fields);
-					for ( var key in fields ) {
-						this.content[ this.content.length ] = fields[key];
-					}
+			_.each(content, function (item) {
+				if ( item.type == 'fields' ) {
+					self._registerFields( item.fields, options.fields );
 				}
-				else if ( content[ii].type == 'fieldset' ) {
-					this.content[ this.content.length ] = new Form.Fieldset({
-						schema: content[ii],
+				else if ( item.type == 'fieldset' ) {
+					self.content[ self.content.length ] = new Form.Fieldset({
+						dependencyClass: self.dependencyClass,
+						schema: item,
 						fields: options.fields
 					});
 				}
-			}
+			});
 		}
 
 		//Override defaults
 		this.template = options.template || this.constructor.template;
+	},
+	
+	_registerFields: function (fields, fields_ref) {
+		_.each(fields, function (field) {
+			if ( field instanceof Array ) {
+				this._registerDependants( field, fields_ref );
+			} else {
+				this.content[ this.content.length ] = fields_ref[ field ];
+			}
+		}, this);
+	},
+	
+	_registerDependants: function (fieldsets, fields_ref) {
+		var dependants = this.content[ this.content.length - 1 ].dependants;
+		
+		_.each(fieldsets, function (fieldset) {
+			dependants[ dependants.length ] = new Form.Fieldset({
+				dependencyClass: this.dependencyClass,
+				cssClass: this.dependencyClass,
+				schema: fieldset,
+				fields: fields_ref
+			});
+		}, this);
 	},
 
   /**
@@ -1136,6 +1165,8 @@ Form.Fieldset = Backbone.View.extend({
 
 		//Render fieldset
 		var $fieldset = $($.trim(this.template(_.result(this, 'templateData'))));
+		
+		$fieldset.addClass( this.cssClass );
 
 		//Render fields
 		$fieldset.find('[data-fields]').add($fieldset).each(function(i, el) {
@@ -1208,35 +1239,43 @@ Form.Fieldset = Backbone.View.extend({
 
 Form.Field = Backbone.View.extend({
 
-  /**
-   * Constructor
-   * 
-   * @param {Object} options.key
-   * @param {Object} options.form
-   * @param {Object} [options.schema]
-   * @param {Function} [options.schema.template]
-   * @param {Backbone.Model} [options.model]
-   * @param {Object} [options.value]
-   * @param {String} [options.idPrefix]
-   * @param {Function} [options.template]
-   * @param {Function} [options.errorClassName]
-   */
-  initialize: function(options) {
-    options = options || {};
+	/**
+	 * Constructor
+	 * 
+	 * @param {Object} options.key
+	 * @param {Object} options.form
+	 * @param {Object} [options.schema]
+	 * @param {Function} [options.schema.template]
+	 * @param {Backbone.Model} [options.model]
+	 * @param {Object} [options.value]
+	 * @param {String} [options.idPrefix]
+	 * @param {Function} [options.template]
+	 * @param {Function} [options.errorClassName]
+	 */
+	initialize: function(options) {
+		options = options || {};
 
-    //Store important data
-    _.extend(this, _.pick(options, 'form', 'key', 'model', 'value', 'idPrefix'));
+		//Store important data
+		_.extend(this, _.pick(options, 'form', 'key', 'model', 'value', 'idPrefix'));
 
-    //Create the full field schema, merging defaults etc.
-    var schema = this.schema = this.createSchema(options.schema);
+		//Create the full field schema, merging defaults etc.
+		var schema = this.schema = this.createSchema(options.schema);
 
-    //Override defaults
-    this.template = options.template || schema.template || this.constructor.template;
-    this.errorClassName = options.errorClassName || this.constructor.errorClassName;
+		//Override defaults
+		this.template = options.template || schema.template || this.constructor.template;
+		this.errorClassName = options.errorClassName || this.constructor.errorClassName;
+		this.dependants = [];
 
-    //Create editor
-    this.editor = this.createEditor();
-  },
+		//Create editor
+		this.editor = this.createEditor();
+		var self = this;
+		this.editor.on('change', function() {
+			var value = this.getValue();
+			_.each(self.dependants, function (fieldset) {
+				fieldset.$el.toggleClass('active', value);
+			});
+		});
+	},
 
   /**
    * Creates the full field schema, merging defaults etc.
@@ -1344,39 +1383,43 @@ Form.Field = Backbone.View.extend({
     };
   },
 
-  /**
-   * Render the field and editor
-   *
-   * @return {Field} self
-   */
-  render: function() {
-    var schema = this.schema,
-        editor = this.editor;
+	/**
+	 * Render the field and editor
+	 *
+	 * @return {Field} self
+	 */
+	render: function() {
+		var schema = this.schema,
+		editor = this.editor;
 
-    //Render field
-    var $field = $($.trim(this.template(_.result(this, 'templateData'))));
+		//Render field
+		var $field = $($.trim(this.template(_.result(this, 'templateData'))));
 
-    if (schema.fieldClass) $field.addClass(schema.fieldClass);
-    if (schema.fieldAttrs) $field.attr(schema.fieldAttrs);
+		if (schema.fieldClass) $field.addClass(schema.fieldClass);
+		if (schema.fieldAttrs) $field.attr(schema.fieldAttrs);
 
-    //Render editor
-    $field.find('[data-editor]').add($field).each(function(i, el) {
-      var $container = $(el),
-          selection = $container.attr('data-editor');
+		//Render editor
+		$field.find('[data-editor]').add($field).each(function(i, el) {
+			var $container = $(el),
+			selection = $container.attr('data-editor');
 
-      if (_.isUndefined(selection)) return;
+			if (_.isUndefined(selection)) return;
 
-      if ( $container.attr('replace') === undefined ) {
-		$container.append(editor.render().el);
-	  } else {
-		$container.replaceWith( editor.render().el );
-	  }
-    });
+			if ( $container.attr('replace') === undefined ) {
+				$container.append(editor.render().el);
+			} else {
+				$container.replaceWith( editor.render().el );
+			}
+		});
 
-    this.setElement($field);
+		_.each(this.dependants, function(fieldset) {
+			$field.append( fieldset.render().el );
+		});
+		
+		this.setElement($field);
 
-    return this;
-  },
+		return this;
+	},
 
   /**
    * Check the validity of the field
