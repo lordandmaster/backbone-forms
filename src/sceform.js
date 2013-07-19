@@ -12,6 +12,8 @@
 
 var SceForm = Form.extend({
 	
+	_submitView: null,
+	
 	/**
 	 * Constructor
 	 * 
@@ -33,10 +35,59 @@ var SceForm = Form.extend({
 		
 		var form_options = _.defaults( spec, options );
 		
+		if ( options.submit ) {
+			if ( !form_options.fieldsets ) {
+				form_options.fieldsets = [];
+			}
+			
+			// Extra fieldset for submit area if supplied
+			form_options.fieldsets.push([]);
+			
+			// Render the extra field
+			var data = _.defaults(options.submit, {
+				schemaAttrs: options.submit,
+				editorId: '',
+				editorType: 'submit'
+			});
+			var $field = $($.trim(options.fieldTemplate( data )));
+			
+			// Stick the submit HTML into the field
+			$field.find('[data-editor]').add($field).each(function(i, el) {
+				var $container = $(el);
+				var selection = $container.attr('data-editor');
+				
+				if ( _.isUndefined(selection) ) return;
+				
+				if ( $container.attr('replace') === undefined ) {
+					$container.append( options.submit.html );
+				} else {
+					$container.replaceWith( options.submit.html );
+				}
+			});
+			
+			// Store the rendered result
+			this._submitView = $field;
+		}
+		
 		SceForm.__super__.initialize.call(this, form_options);
 		
-		this.setSubmitHandler( options.submit );
+	},
+	
+	/**
+	 * Add the rendered submit UI if present
+	 */
+	render: function () {
+		SceForm.__super__.render.call(this);
 		
+		var container = this.$el.find('[data-fieldsets]');
+		if ( !container.length ) container = this.$el;
+		container = container.children(':last-child');
+		
+		var fields = container.find('[data-fields]');
+		if ( !fields.length ) fields = container;
+		fields.append( this._submitView );
+		
+		return this;
 	},
 	
 	/**
@@ -176,9 +227,9 @@ var SceForm = Form.extend({
 		}
 		
 		// Recurse over any dependent fields
-		if ( sce_field.dependent_fields ) {
+		if ( sce_field.dependent_elements ) {
 			this._parseXmlNest(
-				sce_field.dependent_fields, 'field', this._parseField,
+				sce_field.dependent_elements, 'field', this._parseField,
 				[ fields, result, options ]
 			);
 		}
@@ -224,10 +275,6 @@ var SceForm = Form.extend({
 			if ( options.addEmptySelectOption ) {
 				field.options.unshift({ val: null, label: ''});
 			}
-		}
-		
-		if ( $.isEmptyObject(sce_field.current_value) ) {
-			sce_field.current_value = null;
 		}
 		
 		// Attach to schema, model, and structure
@@ -326,16 +373,6 @@ var SceForm = Form.extend({
 		throw new Error(
 			"Unknown spec.datatype: '" + sce_field.datatype + "'"
 		);
-	},
-	
-	setSubmitHandler: function (submit) {
-		if ( submit == undefined ) {
-			return;
-		}
-		
-		this.$el.submit(function() {
-			return submit( this.getValue() ).call(this);
-		}.bind(this));
 	}
 	
 }, {

@@ -140,7 +140,7 @@ test('Recurses on dependent fields', function() {
 	var form = new SceForm({
 		specs: [{ category: 
 			{ name: 'Set1', content: [{ fields: [
-				{ name: 'name', datatype: 'text', dependent_fields: { field: [
+				{ name: 'name', datatype: 'text', dependent_elements: { field: [
 					{ name: 'first', datatype: 'text' },
 					{ name: 'age', datatype: 'int' }
 				]} }
@@ -789,6 +789,49 @@ test('removes fieldsets, fields and self', function() {
   //Field.remove is called twice each because is called directly and through fieldset
   //This is done in case fieldsets are not used, e.g. fields are included directly through template
   same(SceForm.Field.prototype.remove.callCount, 4);
+});
+
+
+
+module('SceForm#submit');
+
+test('Creates submit button', function() {
+	var caught = false;
+	var btn1 = $('<input type="submit"/>');
+	var btn2 = $('<input type="image"/>');
+	var btn3 = $('<button></button>');
+	
+	var form = new SceForm({
+		fieldTemplate: function() { return '<span class="hello" data-editor></span>'; },
+		submit: {
+			html: btn1.add(btn2).add(btn3)
+		},
+		onSubmit: function(e) { caught = true; return false; }
+	});
+	
+	form.render();
+	btn3.click(function() { form.$el.submit(); });
+	
+	caught = false;
+	btn1.click();
+	same(caught, true);
+	
+	caught = false;
+	btn2.click();
+	same(caught, true);
+	
+	caught = false;
+	btn3.click();
+	same(caught, true);
+	
+	caught = false;
+	form.$el.submit();
+	same(caught, true);
+	
+	same(cleanse(btn1.parent()[0].className), 'hello');
+	same(cleanse(btn2.parent()[0].className), 'hello');
+	same(cleanse(btn3.parent()[0].className), 'hello');
+	
 });
 
 })(Backbone.SceForm);

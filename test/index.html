@@ -53,6 +53,7 @@ These use the individual source files. Use this while developing
 			+ '<label for="' + options.editorId + '">'
 			+ options.title + '</label><span data-editor replace></span>'
 			+ '<span class="tooltip">' + options.schemaAttrs.description + '</span>'
+			+ '<span style="color:red">' + options.schemaAttrs.errortext + '</span>'
 			+ '</li>';
 	};
 
@@ -223,7 +224,8 @@ These use the individual source files. Use this while developing
 						name: 'input_name',
 						label: 'Name',
 						datatype: 'text',
-						current_value: [],
+						current_value: '',
+						errortext: 'Bad',
 						description: 'Here is some help text'
 					},
 					{
@@ -236,7 +238,7 @@ These use the individual source files. Use this while developing
 						name: 'input_textarea',
 						label: 'Entertain me',
 						datatype: 'textarea',
-						current_value: [],
+						current_value: '',
 						description: 'Write a story maybe'
 					}
 				]}}]
@@ -309,7 +311,10 @@ These use the individual source files. Use this while developing
 		console.log('SCEFORM ----');
 		var form = new Backbone.SceForm({
 			specs: specs,
-			fieldTemplate: form_template
+			fieldTemplate: form_template,
+			submit: {
+				html: '<input type="submit"/>'
+			}
 		});
 		console.log('---- SCEFORM');
 		

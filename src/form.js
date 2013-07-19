@@ -6,74 +6,77 @@
 var Form = Backbone.View.extend({
 
 	_chosen_editors: [],
+	_submitHandler: null,
 
-  /**
-   * Constructor
-   * 
-   * @param {Object} [options.schema]
-   * @param {Backbone.Model} [options.model]
-   * @param {Object} [options.data]
-   * @param {String[]|Object[]} [options.fieldsets]
-   * @param {String[]} [options.fields]
-   * @param {String} [options.idPrefix]
-   * @param {Form.Field} [options.Field]
-   * @param {Form.Fieldset} [options.Fieldset]
-   * @param {Function} [options.template]
-   */
-  initialize: function(options) {
-    var self = this;
+	/**
+	 * Constructor
+	 * 
+	 * @param {Object} [options.schema]
+	 * @param {Backbone.Model} [options.model]
+	 * @param {Object} [options.data]
+	 * @param {String[]|Object[]} [options.fieldsets]
+	 * @param {String[]} [options.fields]
+	 * @param {String} [options.idPrefix]
+	 * @param {Form.Field} [options.Field]
+	 * @param {Form.Fieldset} [options.Fieldset]
+	 * @param {Function} [options.template]
+	 */
+	initialize: function(options) {
+		var self = this;
 
-    options = options || {};
+		options = options || {};
 
-    //Find the schema to use
-    var schema = this.schema = (function() {
-      //Prefer schema from options
-      if (options.schema) return _.result(options, 'schema');
+		//Find the schema to use
+		var schema = this.schema = (function() {
+			//Prefer schema from options
+			if (options.schema) return _.result(options, 'schema');
 
-      //Then schema on model
-      var model = options.model;
-      if (model && model.schema) {
-        return (_.isFunction(model.schema)) ? model.schema() : model.schema;
-      }
+			//Then schema on model
+			var model = options.model;
+			if (model && model.schema) {
+				return (_.isFunction(model.schema)) ? model.schema() : model.schema;
+			}
 
-      //Then built-in schema
-      if (self.schema) {
-        return (_.isFunction(self.schema)) ? self.schema() : self.schema;
-      }
+			//Then built-in schema
+			if (self.schema) {
+				return (_.isFunction(self.schema)) ? self.schema() : self.schema;
+			}
 
-      //Fallback to empty schema
-      return {};
-    })();
+			//Fallback to empty schema
+			return {};
+		})();
 
-    //Store important data
-    _.extend(this, _.pick(options, 'model', 'data', 'idPrefix'));
+		//Store important data
+		_.extend(this, _.pick(options, 'model', 'data', 'idPrefix'));
 
-    //Override defaults
-    var constructor = this.constructor;
-    this.template = options.template || constructor.template;
-    this.Fieldset = options.Fieldset || constructor.Fieldset;
-    this.Field = options.Field || constructor.Field;
-    this.NestedField = options.NestedField || constructor.NestedField;
+		//Override defaults
+		var constructor = this.constructor;
+		this.template = options.template || constructor.template;
+		this.Fieldset = options.Fieldset || constructor.Fieldset;
+		this.Field = options.Field || constructor.Field;
+		this.NestedField = options.NestedField || constructor.NestedField;
 
-    //Check which fields will be included (defaults to all)
-    var selectedFields = this.selectedFields = options.fields || _.keys(schema);
+		//Check which fields will be included (defaults to all)
+		var selectedFields = this.selectedFields = options.fields || _.keys(schema);
 
-    //Create fields
-    var fields = this.fields = {};
+		//Create fields
+		var fields = this.fields = {};
 
-    _.each(selectedFields, function(key) {
-      var fieldSchema = schema[key];
-      fields[key] = this.createField(key, fieldSchema);
-    }, this);
+		_.each(selectedFields, function(key) {
+		var fieldSchema = schema[key];
+			fields[key] = this.createField(key, fieldSchema);
+		}, this);
 
-    //Create fieldsets
-    var fieldsetSchema = options.fieldsets || [selectedFields],
-        fieldsets = this.fieldsets = [];
+		//Create fieldsets
+		var fieldsetSchema = options.fieldsets || [selectedFields],
+		fieldsets = this.fieldsets = [];
 
-    _.each(fieldsetSchema, function(itemSchema) {
-      this.fieldsets.push(this.createFieldset(itemSchema));
-    }, this);
-  },
+		_.each(fieldsetSchema, function(itemSchema) {
+			this.fieldsets.push(this.createFieldset(itemSchema));
+		}, this);
+		
+		this.setSubmitHandler( options.onSubmit );
+	},
 
   /**
    * Creates a Fieldset instance
@@ -223,6 +226,13 @@ var Form = Backbone.View.extend({
         $container.append(fieldset.render().el);
       });
     });
+	
+	var submit = this._submitHandler;
+	if ( typeof submit == 'function' ) {
+		$form.submit(function(e) {
+			return submit.call(this, e);
+		});
+	}
 
     //Set the main element
     this.setElement($form);
@@ -448,6 +458,18 @@ var Form = Backbone.View.extend({
 		method = method || 'html';
 		$(parent)[method]( this.render().el );
 		this.initChosens();
+	},
+	
+	/**
+	 * Add a handler for when the form submits. Access value hash with
+	 * this.getValue() in the handler
+	 */
+	setSubmitHandler: function (submit) {
+		if ( submit == undefined ) {
+			return;
+		}
+		
+		this._submitHandler = submit;
 	}
 
 }, {
