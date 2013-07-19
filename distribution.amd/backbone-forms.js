@@ -17,12 +17,24 @@ define(['jquery', 'underscore', 'backbone1.0'], function($, _, Backbone) {
  */
 _.mixin({
 
+	/**
+	 * Returns the first argument passed that was not undefined
+	 */
 	firstDefined: function() {
 		for ( var ii = 0; ii < arguments.length; ii++ ) {
 			if ( arguments[ii] !== undefined ) {
 				return arguments[ii];
 			}
 		}
+	},
+	
+	/**
+	 * Does _.defaults() for only the keys specified by picks
+	 */
+	pickDefaults: function (picks) {
+		var args = Array.prototype.slice.call(arguments, 1);
+		var filled = this.defaults.apply(null, args);
+		return _.pick(filled, picks);
 	}
 	
 });
@@ -33,73 +45,78 @@ _.mixin({
 
 var Form = Backbone.View.extend({
 
-  /**
-   * Constructor
-   * 
-   * @param {Object} [options.schema]
-   * @param {Backbone.Model} [options.model]
-   * @param {Object} [options.data]
-   * @param {String[]|Object[]} [options.fieldsets]
-   * @param {String[]} [options.fields]
-   * @param {String} [options.idPrefix]
-   * @param {Form.Field} [options.Field]
-   * @param {Form.Fieldset} [options.Fieldset]
-   * @param {Function} [options.template]
-   */
-  initialize: function(options) {
-    var self = this;
+	_chosen_editors: [],
+	_submitHandler: null,
 
-    options = options || {};
+	/**
+	 * Constructor
+	 * 
+	 * @param {Object} [options.schema]
+	 * @param {Backbone.Model} [options.model]
+	 * @param {Object} [options.data]
+	 * @param {String[]|Object[]} [options.fieldsets]
+	 * @param {String[]} [options.fields]
+	 * @param {String} [options.idPrefix]
+	 * @param {Form.Field} [options.Field]
+	 * @param {Form.Fieldset} [options.Fieldset]
+	 * @param {Function} [options.template]
+	 */
+	initialize: function(options) {
+		var self = this;
 
-    //Find the schema to use
-    var schema = this.schema = (function() {
-      //Prefer schema from options
-      if (options.schema) return _.result(options, 'schema');
+		options = options || {};
 
-      //Then schema on model
-      var model = options.model;
-      if (model && model.schema) {
-        return (_.isFunction(model.schema)) ? model.schema() : model.schema;
-      }
+		//Find the schema to use
+		var schema = this.schema = (function() {
+			//Prefer schema from options
+			if (options.schema) return _.result(options, 'schema');
 
-      //Then built-in schema
-      if (self.schema) {
-        return (_.isFunction(self.schema)) ? self.schema() : self.schema;
-      }
+			//Then schema on model
+			var model = options.model;
+			if (model && model.schema) {
+				return (_.isFunction(model.schema)) ? model.schema() : model.schema;
+			}
 
-      //Fallback to empty schema
-      return {};
-    })();
+			//Then built-in schema
+			if (self.schema) {
+				return (_.isFunction(self.schema)) ? self.schema() : self.schema;
+			}
 
-    //Store important data
-    _.extend(this, _.pick(options, 'model', 'data', 'idPrefix'));
+			//Fallback to empty schema
+			return {};
+		})();
 
-    //Override defaults
-    var constructor = this.constructor;
-    this.template = options.template || constructor.template;
-    this.Fieldset = options.Fieldset || constructor.Fieldset;
-    this.Field = options.Field || constructor.Field;
-    this.NestedField = options.NestedField || constructor.NestedField;
+		//Store important data
+		_.extend(this, _.pick(options, 'model', 'data', 'idPrefix'));
 
-    //Check which fields will be included (defaults to all)
-    var selectedFields = this.selectedFields = options.fields || _.keys(schema);
+		//Override defaults
+		var constructor = this.constructor;
+		this.template = options.template || constructor.template;
+		this.Fieldset = options.Fieldset || constructor.Fieldset;
+		this.Field = options.Field || constructor.Field;
+		this.NestedField = options.NestedField || constructor.NestedField;
 
-    //Create fields
-    var fields = this.fields = {};
+		//Check which fields will be included (defaults to all)
+		var selectedFields = this.selectedFields = options.fields || _.keys(schema);
 
-    _.each(selectedFields, function(key) {
-      var fieldSchema = schema[key];
-      fields[key] = this.createField(key, fieldSchema);
-    }, this);
+		//Create fields
+		var fields = this.fields = {};
 
-    //Create fieldsets
-    var fieldsetSchema = options.fieldsets || [selectedFields],
-        fieldsets = this.fieldsets = [];
+		_.each(selectedFields, function(key) {
+		var fieldSchema = schema[key];
+			fields[key] = this.createField(key, fieldSchema);
+		}, this);
 
-    _.each(fieldsetSchema, function(itemSchema) {
-      this.fieldsets.push(this.createFieldset(itemSchema));
-    }, this);
-  },
+		//Create fieldsets
+		var fieldsetSchema = options.fieldsets || [selectedFields],
+		fieldsets = this.fieldsets = [];
+
+		_.each(fieldsetSchema, function(itemSchema) {
+			this.fieldsets.push(this.createFieldset(itemSchema));
+		}, this);
+		
+		this.setSubmitHandler( options.onSubmit );
+	},
 
   /**
    * Creates a Fieldset instance
@@ -144,6 +161,10 @@ var Form = Backbone.View.extend({
     var field = new this.Field(options);
 
     this.listenTo(field.editor, 'all', this.handleEditorEvent);
+	
+	if ( schema && schema.type == 'Chosen' ) {
+		this._chosen_editors[ this._chosen_editors.length ] = field.editor;
+	}
 
     return field;
   },
@@ -245,6 +266,13 @@ var Form = Backbone.View.extend({
         $container.append(fieldset.render().el);
       });
     });
+	
+	var submit = this._submitHandler;
+	if ( typeof submit == 'function' ) {
+		$form.submit(function(e) {
+			return submit.call(this, e);
+		});
+	}
 
     //Set the main element
     this.setElement($form);
@@ -450,7 +478,39 @@ var Form = Backbone.View.extend({
     });
 
     Backbone.View.prototype.remove.call(this);
-  }
+  },
+  
+	/**
+	 * Execute $.chosen on all the editors. This should only be called after the
+	 * selects have been attached to the DOM. Because chosen is weird like that?
+	 */
+	initChosens: function() {
+		for ( var ii = 0; ii < this._chosen_editors.length; ii++ ) {
+			this._chosen_editors[ii].initDisplay();
+		}
+	},
+  
+	/**
+	 * Apply element to DOM - this method should be used instead of manually
+	 * appending the html because initChosens needs to be executed.
+	 */
+	renderTo: function (parent, method) {
+		method = method || 'html';
+		$(parent)[method]( this.render().el );
+		this.initChosens();
+	},
+	
+	/**
+	 * Add a handler for when the form submits. Access value hash with
+	 * this.getValue() in the handler
+	 */
+	setSubmitHandler: function (submit) {
+		if ( submit == undefined ) {
+			return;
+		}
+		
+		this._submitHandler = submit;
+	}
 
 }, {
 
@@ -483,6 +543,21 @@ var Form = Backbone.View.extend({
 
 var SceForm = Form.extend({
 	
+	_submitView: null,
+	
+	/**
+	 * Constructor
+	 * 
+	 * @param {Object} [options.schema]
+	 * @param {Backbone.Model} [options.model]
+	 * @param {Object} [options.data]
+	 * @param {String[]|Object[]} [options.fieldsets]
+	 * @param {String[]} [options.fields]
+	 * @param {String} [options.idPrefix]
+	 * @param {Form.Field} [options.Field]
+	 * @param {Form.Fieldset} [options.Fieldset]
+	 * @param {Function} [options.template]
+	 */
 	initialize: function (options) {
 	
 		options = options || {};
@@ -491,153 +566,344 @@ var SceForm = Form.extend({
 		
 		var form_options = _.defaults( spec, options );
 		
+		if ( options.submit ) {
+			if ( !form_options.fieldsets ) {
+				form_options.fieldsets = [];
+			}
+			
+			// Extra fieldset for submit area if supplied
+			form_options.fieldsets.push([]);
+			
+			// Render the extra field
+			var data = _.defaults(options.submit, {
+				schemaAttrs: options.submit,
+				editorId: '',
+				editorType: 'submit'
+			});
+			var $field = $($.trim(options.fieldTemplate( data )));
+			
+			// Stick the submit HTML into the field
+			$field.find('[data-editor]').add($field).each(function(i, el) {
+				var $container = $(el);
+				var selection = $container.attr('data-editor');
+				
+				if ( _.isUndefined(selection) ) return;
+				
+				if ( $container.attr('replace') === undefined ) {
+					$container.append( options.submit.html );
+				} else {
+					$container.replaceWith( options.submit.html );
+				}
+			});
+			
+			// Store the rendered result
+			this._submitView = $field;
+		}
+		
 		SceForm.__super__.initialize.call(this, form_options);
 		
 	},
 	
+	/**
+	 * Add the rendered submit UI if present
+	 */
+	render: function () {
+		SceForm.__super__.render.call(this);
+		
+		var container = this.$el.find('[data-fieldsets]');
+		if ( !container.length ) container = this.$el;
+		container = container.children(':last-child');
+		
+		var fields = container.find('[data-fields]');
+		if ( !fields.length ) fields = container;
+		fields.append( this._submitView );
+		
+		return this;
+	},
+	
+	/**
+	 * Get a Form spec from the SceForm spec
+	 *
+	 * @param {Object} @see options from initialize()
+	 *
+	 * @return spec in Form format
+	 */
 	mapSceSpecsToForm: function ( options ) {
 		if ( !options || !options.specs ) {
 			return {};
 		}
-		if ( options.specs.categories && options.specs.categories.category ) {
-			options.specs = options.specs.categories.category;
+		
+		if ( options.specs.categories && options.specs.categories.content ) {
+			options.specs = options.specs.categories.content;
+		} else if ( options.specs.content ) {
+			options.specs = options.specs.content;
 		}
-		if ( options.specs.length < 1 ) {
+		
+		if ( options.specs instanceof Array && options.specs.length < 1 ) {
 			return {};
 		}
 		
-		var sce_spec = options.specs;
+		var result = {
+			model: {},     // Passed into Backbone.Model constructor
+			schema: {},    // In format expected by Form
+			fieldsets: []  // In format expected by Form
+		};
+		
+		this._parseCatContent( result, options, null, options.specs );
+		
+		result.model = new Backbone.Model(result.model);
+		return result;
+	},
 	
-		var model = {};     // Passed into Backbone.Model constructor
-		var schema = {};    // In format expected by Form
-		var fieldsets = []; // In format expected by Form
-		
-		for ( var ii = 0; ii < sce_spec.length; ii++ ) {
-		
-			var fields        = [];
-			var sce_fieldset  = ( sce_spec[ii].fields.field )
-				? sce_spec[ii].fields.field : sce_spec[ii].fields;
-			
-			// Each field in the fieldset
-			for ( var jj = 0; jj < sce_fieldset.length; jj++ ) {
-				var sce_field = sce_fieldset[jj];
-				var field = {};
-				
-				// TODO: Clean this up
-				var template = _.firstDefined(
-					sce_field.template,
-					options.fieldTemplate,
-					SceForm.Field.template
-				);
-				var use_chosen = _.firstDefined(
-					sce_field.useChosen,
-					options.useChosen,
-					SceForm.DEFAULTS.useChosen
-				);
-				var chosen_opt = _.firstDefined(
-					sce_field.chosenOptions,
-					options.chosenOptions,
-					SceForm.DEFAULTS.chosenOptions
-				);
-				
-				// TODO: Clean this up. This is a hack.
-				if ( sce_field.datatype == 'range' ) {
-					var sce_field1_name = sce_field.name + '_min';
-					var sce_field2_name = sce_field.name + '_max';
-					var field1 = { title: sce_field.label + ' Min', template: template, schemaAttrs: sce_field };
-					var field2 = { title: sce_field.label + ' Max', template: template, schemaAttrs: sce_field };
-					schema[ sce_field1_name ] = field1;
-					schema[ sce_field2_name ] = field2;
-					model[ sce_field1_name ] = (sce_field.current_value) ? sce_field.current_value[0] : null;
-					model[ sce_field2_name ] = (sce_field.current_value) ? sce_field.current_value[1] : null;
-					fields[ fields.length ] = sce_field1_name;
-					fields[ fields.length ] = sce_field2_name;
-					continue;
-				}
-				
-				// Map SceForm::datatype to Form::Type
-				switch ( sce_field.datatype ) {
-					
-					//// Alphabetically sorted
-					case 'boolean':
-						field.type = 'Checkbox';
-						break;
-					case 'date':
-						field.type = 'Date';
-						break;
-					case 'int':
-						field.type = 'Text';
-						break;
-					/*case 'range':
-						break;*/
-					case 'single_select':
-						field.type = use_chosen ? 'Chosen' : 'Select';
-						field.chosenOptions = use_chosen ? chosen_opt : undefined;
-						break;
-					case 'multi_select':
-						field.type = use_chosen ? 'Chosen' : 'Checkboxes';
-						field.chosenOptions = use_chosen ? chosen_opt : undefined;
-						break;
-					case 'text':
-						field.type = 'Text';
-						break;
-					case 'textarea':
-						field.type = 'TextArea';
-						break;
-					case 'time':
-						field.type = 'DateTime';
-						break;
-					case 'uint':
-						field.type = 'Text';
-						break;
-					
-					// Force each spec type to be explicitly mapped
-					default:
-						throw new Error(
-							"Unknown spec.datatype: '" +
-							sce_field.datatype + "'"
-						);
-				}
-				
-				field.title       = sce_field.label;
-				field.schemaAttrs = sce_field;
-				field.template    = template;
-
-				// Assign and format options for select fields
-				if ( sce_field.options ) {
-					if ( sce_field.options.option ) {
-						field.options = [];
-
-						for ( var oi = 0; oi < sce_field.options.option.length; oi++ ) {
-							field.options[ field.options.length ] = {
-								  val: sce_field.options.option[oi].value,
-								label: sce_field.options.option[oi].label
-							};
-						}
-					} else {
-						field.options = sce_field.options;
-					}
-				}
-				
-				// Attach to schema, model, and structure
-				schema[ sce_field.name ] = field;
-				model[ sce_field.name ]  = sce_field.current_value;
-				fields[ fields.length ]  = sce_field.name;
-			}
-			
-			// Append to structure
-			fieldsets[ fieldsets.length ] = {
-				legend: sce_spec[ii].name,
-				help:   sce_spec[ii].description,
-				fields: fields
-			};
+	/**
+	 * Parses a content block and calls the appropriate helper parser for
+	 * the type of content. Currently supported block types are 'category'
+	 * and 'fields'
+	 *
+	 * @param {Object} Reference to container for fieldset
+	 * @param {Object} @see options from initialize()
+	 * @param [Array]  Reference to container for fields
+	 * @param {Object} Content definition in SceForm format
+	 */
+	_parseCatContent: function (result, options, fields, spec) {
+		if ( !spec ) {
+			return;
 		}
 		
-		return {
-			model: new Backbone.Model(model),
-			schema: schema,
-			fieldsets: fieldsets
+		for ( var ii = 0; ii < spec.length; ii ++ ) {
+			if ( spec[ii].fields ) {
+				if ( fields == null ) {
+					throw new Error( 'Not expecting a fields group here' );
+				}
+				this._parseXmlNest(
+					spec[ii].fields, 'field', this._parseField,
+					[ fields, result, options ]
+				);
+			} else if ( spec[ii].category ) {
+				this._parseXmlNest(
+					spec[ii].category, null, this._parseFieldset,
+					[ result, options ]
+				);
+			}
+		}
+	},
+	
+	/**
+	 * Wrapper helper that performs another parse function, but does not
+	 * assume that the keys will be arrays. When length = 1, the key is not
+	 * passed as an array so this function catches that condition.
+	 *
+	 * @param {Object}   The container of nodes to be checked
+	 * @param {String}   The key within the container to check for an array
+	 * @param {Function} Parser method to call on each node
+	 * @param {Array}    Arguments to pass first to the parser method
+	 */
+	_parseXmlNest: function (nest, key, parser, args) {
+		if ( !nest ) {
+			return;
+		}
+		
+		nest = (nest instanceof Array) ? nest : [ nest ];
+		args = args || [];
+		
+		for ( var ii = 0; ii < nest.length; ii++ ) {
+			if ( !key || !nest[ii][key] ) {
+				parser.apply( this, args.concat([ nest[ii] ]) );
+			} else {
+				var inner_nest = nest[ii][key];
+				inner_nest = (inner_nest instanceof Array) ? inner_nest : [ inner_nest ];
+				for ( var jj = 0; jj < inner_nest.length; jj++ ) {
+					parser.apply( this, args.concat([ inner_nest[jj] ]) );
+				}
+			}
+		}
+	},
+	
+	/**
+	 * Parses a single fieldset from the SceForm spec
+	 *
+	 * @param {Object} Reference to container for fieldset
+	 * @param {Object} @see options from initialize()
+	 * @param {Object} Fieldset definition in SceForm format
+	 *
+	 * @return Fieldset definition in Form format
+	 */
+	_parseFieldset: function (result, options, spec) {
+		var fields        = [];
+			
+		result.fieldsets[ result.fieldsets.length ] = {
+			legend: spec.name,
+			help:   spec.description,
+			fields: fields
 		};
+		
+		this._parseCatContent( result, options, fields, spec.content );
+	},
+	
+	/**
+	 * Parses a single field from the SceForm spec
+	 *
+	 * @param {Object} Reference to container for field
+	 * @param {Object} Reference to container for fieldset
+	 * @param {Object} @see options from initialize()
+	 * @param {Object} field definition in SceForm format
+	 */
+	_parseField: function (fields, result, options, sce_field) {
+		var props = this._getFieldOptions( sce_field, options );
+		
+		if ( sce_field.datatype == 'range' ) {
+			this._parseRangeField( fields, result, props, sce_field );
+		} else {
+			this._parseNormalField( fields, result, props, sce_field );
+		}
+		
+		// Recurse over any dependent fields
+		if ( sce_field.dependent_elements ) {
+			this._parseXmlNest(
+				sce_field.dependent_elements, 'field', this._parseField,
+				[ fields, result, options ]
+			);
+		}
+	},
+	
+	/**
+	 * Parses a single range field from the SceForm spec
+	 *
+	 * @param @see params from _parseField (these should always be identical)
+	 */
+	_parseRangeField: function (fields, result, options, sce_field) {
+		var makeRangeField = function(name, label, cvindex) {
+			var name  = sce_field.name + name;
+			var label = sce_field.label + label;
+			var value = (sce_field.current_value) ? sce_field.current_value[cvindex] : null;
+			
+			var field = { title: label, template: options.fieldTemplate, schemaAttrs: sce_field };
+			
+			result.schema[ name ]   = field;
+			result.model[ name ]    = value;
+			fields[ fields.length ] = name;
+		};
+		
+		makeRangeField('_min', ' Min', 0);
+		makeRangeField('_max', ' Max', 1);
+	},
+	
+	/**
+	 * Parses a single non-range field from the SceForm spec
+	 *
+	 * @param @see params from _parseField (these should always be identical)
+	 */
+	_parseNormalField: function (fields, result, options, sce_field) {
+		var field = this._makeNewFieldByType( options, sce_field );
+		
+		field.name        = sce_field.name;
+		field.title       = sce_field.label;
+		field.schemaAttrs = sce_field;
+		field.template    = options.fieldTemplate;
+		
+		if ( sce_field.options ) {
+			field.options = this._parseSelectOptions( sce_field );
+			if ( options.addEmptySelectOption ) {
+				field.options.unshift({ val: null, label: ''});
+			}
+		}
+		
+		// Attach to schema, model, and structure
+		result.schema[ sce_field.name ] = field;
+		result.model[ sce_field.name ]  = sce_field.current_value;
+		fields[ fields.length ]         = sce_field.name;
+	},
+	
+	/**
+	 * Parses a set of select Options in SceForm format
+	 *
+	 * @param {Object} field definition in SceForm format
+	 *
+	 * @return Array of options in Form format
+	 */
+	_parseSelectOptions: function (sce_field) {
+		if ( !sce_field.options.option ) {
+			return sce_field.options;
+		}
+		
+		var options = [];
+		
+		this._parseXmlNest( sce_field.options, 'option', function(sce_opt) {
+			options[ options.length ] = {
+				  val: sce_opt.option_value,
+				label: sce_opt.option_label
+			};
+		});
+		
+		return options;
+	},
+	
+	/**
+	 * Evaluates the final options hash by running down the preference
+	 * hierarchy for each parameter.
+	 *
+	 * @param {Object} field definition in SceForm format
+	 * @param {Object} @see options from initialize()
+	 *
+	 * @return Array of options in Form format
+	 */
+	_getFieldOptions: function (sce_field, options) {
+		var result = _.pickDefaults(
+			['addEmptySelectOption', 'useChosen', 'chosenOptions'],
+			sce_field, options, SceForm.DEFAULTS
+		);
+		
+		result.fieldTemplate =_.firstDefined(
+			sce_field.template,
+			options.fieldTemplate,
+			SceForm.Field.template
+		);
+		
+		return result;
+	},
+	
+	/**
+	 * Creates a new object to represent a field with initial type settings
+	 *
+	 * @param @see options from initialize()
+	 * @param {Object} Field definition in SceForm format
+	 */
+	_makeNewFieldByType: function (options, sce_field) {
+		// Map SceForm::datatype to Form::Type
+		switch ( sce_field.datatype ) {
+			
+			//// Alphabetically sorted
+			case 'boolean':
+				return { type: 'Checkbox' };
+			case 'date':
+				return { type: 'Date' };
+			case 'int':
+				return { type: 'Text' };
+			/*case 'range': Handled separately because it requires 2 fields */
+			case 'single_select':
+				return {
+					type: options.useChosen ? 'Chosen' : 'Select',
+					chosenOptions: options.chosenOptions
+				};
+			case 'multi_select':
+				return {
+					type: options.useChosen ? 'Chosen' : 'Checkboxes',
+					chosenOptions: options.chosenOptions
+				};
+			case 'text':
+				return { type: 'Text' };
+			case 'textarea':
+				return { type: 'TextArea' };
+			case 'time':
+				return { type: 'Text' }; // TODO: Time
+			case 'uint':
+				return { type: 'Text' };
+		}
+		
+		// Force each spec type to be explicitly mapped
+		throw new Error(
+			"Unknown spec.datatype: '" + sce_field.datatype + "'"
+		);
 	}
 	
 }, {
@@ -645,7 +911,8 @@ var SceForm = Form.extend({
 	// STATICS
 	
 	DEFAULTS: {
-		useChosen: false,
+		addEmptySelectOption: false,
+		useChosen: true,
 		chosenOptions: { }
 	}
 	
@@ -934,6 +1201,8 @@ Form.Field = Backbone.View.extend({
       type: 'Text',
       title: this.createTitle()
     }, schema);
+	
+	if ( !schema.schemaAttrs ) schema.schemaAttrs = {};
 
 	this.typeName = schema.type;
     //Get the real constructor function i.e. if type is a string such as 'Text'
@@ -942,22 +1211,26 @@ Form.Field = Backbone.View.extend({
     return schema;
   },
 
-  /**
-   * Creates the editor specified in the schema; either an editor string name or
-   * a constructor function
-   *
-   * @return {View}
-   */
-  createEditor: function() {
-    var options = _.extend(
-      _.pick(this, 'schema', 'form', 'key', 'model', 'value'),
-      { id: this.createEditorId() }
-    );
+	/**
+	* Creates the editor specified in the schema; either an editor string name or
+	* a constructor function
+	*
+	* @return {View}
+	*/
+	createEditor: function() {
+		var options = _.extend(
+			_.pick(this, 'schema', 'form', 'key', 'model', 'value'),
+			{
+				id: this.createEditorId(),
+				chosenOptions: this.schema.schemaAttrs.chosenOptions,
+				placeholder: this.schema.schemaAttrs.placeholder
+			}
+		);
 
-    var constructorFn = this.schema.type;
+		var constructorFn = this.schema.type;
 
-    return new constructorFn(options);
-  },
+		return new constructorFn(options);
+	},
 
   /**
    * Creates the ID that will be assigned to the editor
@@ -1863,7 +2136,7 @@ Form.editors.Select = Form.editors.Base.extend({
  */
 Form.editors.Chosen = Form.editors.Select.extend({
 
-	chosenOptions: {},
+	chosenOptions: null,
 	
 	initialize: function (options) {
 		Form.editors.Select.prototype.initialize.call(this, options);
@@ -1872,7 +2145,7 @@ Form.editors.Chosen = Form.editors.Select.extend({
 			throw new Error('Chosen plugin not detected!');
 		}
 		
-		this.$el.chosen( options.chosenOptions );
+		this.chosenOptions = options.chosenOptions;
 	},
 	
 	focus: function() {
@@ -1890,6 +2163,28 @@ Form.editors.Chosen = Form.editors.Select.extend({
 		
 		// See comment in focus()
 		this.$el.triggerHandler('blur');
+	},
+	
+	render: function() {
+		Form.editors.Chosen.__super__.render.call(this);
+		
+		// TODO: Should not use schemaAttrs for this check
+		var attrs = this.schema.schemaAttrs;
+		if ( attrs && attrs.datatype == 'multi_select' ) {
+			this.el.multiple = 'multiple';
+		}
+		
+		return this;
+	},
+	
+	initDisplay: function() {
+		this.$el.chosen( this.chosenOptions );
+	},
+	
+	remove: function() {
+		// Kill the chosen stuff
+		this.$el.next().remove();
+		Form.editors.Chosen.__super__.remove.call(this);
 	}
 	
 });
@@ -2398,7 +2693,7 @@ Form.editors.Date = Form.editors.Base.extend({
 }, {
   //STATICS
   template: _.template('\
-    <div>\
+    <div class="date_picker">\
       <select data-type="date"><%= dates %></select>\
       <select data-type="month"><%= months %></select>\
       <select data-type="year"><%= years %></select>\
@@ -2574,7 +2869,7 @@ Form.editors.DateTime = Form.editors.Base.extend({
 }, {
   //STATICS
   template: _.template('\
-    <div class="bbf-datetime">\
+    <div class="bbf-datetime date_time_picker">\
       <div class="bbf-date-container" data-date></div>\
       <select data-type="hour"><%= hours %></select>\
       :\

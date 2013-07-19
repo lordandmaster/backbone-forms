@@ -230,7 +230,7 @@ var Form = Backbone.View.extend({
 	var submit = this._submitHandler;
 	if ( typeof submit == 'function' ) {
 		$form.submit(function(e) {
-			return submit.call(this, e);
+			return submit.call(self, e);
 		});
 	}
 
