@@ -159,7 +159,7 @@ test('Recurses on dependent fields', function() {
 });
 
 test('Recurses on nested categories', function() {
-	this.sinon.spy(SceForm.prototype, 'createFieldset');
+	this.sinon.spy(SceForm.Fieldset.prototype, 'initialize');
 
 	var form = new SceForm({
 		specs: [{ category:
@@ -181,13 +181,15 @@ test('Recurses on nested categories', function() {
 		}]
 	});
 
-	same(form.createFieldset.callCount, 2);
-	same(form.fieldsets.length, 2);
-
-	var args = form.createFieldset.args;
+	var newFieldset = SceForm.Fieldset.prototype.initialize;
 	
-	same(args[0][0].fields, ['name', 'age']);
-	same(args[1][0].fields, ['hi', 'bye']);
+	same(newFieldset.callCount, 2);
+	same(_.keys(form.fields).length, 4);
+
+	var args = newFieldset.args;
+	
+	same(args[0][0].schema.content[0].fields, ['name', 'age']);
+	same(args[1][0].schema.content[0].fields, ['hi', 'bye']);
 });
 
 test('Adds extra empty option', function() {

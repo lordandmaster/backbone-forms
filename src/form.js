@@ -91,7 +91,7 @@ var Form = Backbone.View.extend({
       fields: this.fields
     };
 
-    return new this.Fieldset(options);
+    return new this.Fieldset(options, this);
   },
 
   /**

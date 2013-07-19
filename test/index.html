@@ -187,6 +187,7 @@ These use the individual source files. Use this while developing
 			textList: ['item1', 'item2', 'item3']
 		});
 
+		console.log('BASEFORM ----');
 		var form = new Backbone.Form({
 			model: model,
 			schema: schema,
@@ -196,6 +197,7 @@ These use the individual source files. Use this while developing
 				{ legend: 'Nested editors', fields: ['object', 'nestedModel'] }
 			]
 		});
+		console.log('---- BASEFORM');
 		
 		window.form = form;
 

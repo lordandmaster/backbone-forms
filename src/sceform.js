@@ -134,16 +134,19 @@ var SceForm = Form.extend({
 	 * @param [Array]  Reference to container for fields
 	 * @param {Object} Content definition in SceForm format
 	 */
-	_parseCatContent: function (result, options, fields, spec) {
+	_parseCatContent: function (result, options, parent, spec) {
 		if ( !spec ) {
 			return;
 		}
 		
 		for ( var ii = 0; ii < spec.length; ii ++ ) {
 			if ( spec[ii].fields ) {
-				if ( fields == null ) {
-					throw new Error( 'Not expecting a fields group here' );
+				if ( parent == null ) {
+					throw new Error( 'Top level fields not supported' );
 				}
+				var fields = [];
+				parent.content[ parent.content.length ]
+					= { type: 'fields', fields: fields };
 				this._parseXmlNest(
 					spec[ii].fields, 'field', this._parseField,
 					[ fields, result, options ]
@@ -151,7 +154,7 @@ var SceForm = Form.extend({
 			} else if ( spec[ii].category ) {
 				this._parseXmlNest(
 					spec[ii].category, null, this._parseFieldset,
-					[ result, options ]
+					[ result, options, parent ]
 				);
 			}
 		}
@@ -197,16 +200,21 @@ var SceForm = Form.extend({
 	 *
 	 * @return Fieldset definition in Form format
 	 */
-	_parseFieldset: function (result, options, spec) {
-		var fields        = [];
-			
-		result.fieldsets[ result.fieldsets.length ] = {
+	_parseFieldset: function (result, options, parent, spec) {
+		var fieldset = {
+			type: 'fieldset',
 			legend: spec.name,
 			help:   spec.description,
-			fields: fields
+			content: []
 		};
 		
-		this._parseCatContent( result, options, fields, spec.content );
+		if ( parent ) {
+			parent.content[ parent.content.length ] = fieldset;
+		} else {
+			result.fieldsets[ result.fieldsets.length ] = fieldset;
+		}
+		
+		this._parseCatContent( result, options, fieldset, spec.content );
 	},
 	
 	/**
