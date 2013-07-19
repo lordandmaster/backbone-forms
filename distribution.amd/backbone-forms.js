@@ -131,7 +131,7 @@ var Form = Backbone.View.extend({
       fields: this.fields
     };
 
-    return new this.Fieldset(options);
+    return new this.Fieldset(options, this);
   },
 
   /**
@@ -270,7 +270,7 @@ var Form = Backbone.View.extend({
 	var submit = this._submitHandler;
 	if ( typeof submit == 'function' ) {
 		$form.submit(function(e) {
-			return submit.call(this, e);
+			return submit.call(self, e);
 		});
 	}
 
@@ -665,16 +665,19 @@ var SceForm = Form.extend({
 	 * @param [Array]  Reference to container for fields
 	 * @param {Object} Content definition in SceForm format
 	 */
-	_parseCatContent: function (result, options, fields, spec) {
+	_parseCatContent: function (result, options, parent, spec) {
 		if ( !spec ) {
 			return;
 		}
 		
 		for ( var ii = 0; ii < spec.length; ii ++ ) {
 			if ( spec[ii].fields ) {
-				if ( fields == null ) {
-					throw new Error( 'Not expecting a fields group here' );
+				if ( parent == null ) {
+					throw new Error( 'Top level fields not supported' );
 				}
+				var fields = [];
+				parent.content[ parent.content.length ]
+					= { type: 'fields', fields: fields };
 				this._parseXmlNest(
 					spec[ii].fields, 'field', this._parseField,
 					[ fields, result, options ]
@@ -682,7 +685,7 @@ var SceForm = Form.extend({
 			} else if ( spec[ii].category ) {
 				this._parseXmlNest(
 					spec[ii].category, null, this._parseFieldset,
-					[ result, options ]
+					[ result, options, parent ]
 				);
 			}
 		}
@@ -728,16 +731,21 @@ var SceForm = Form.extend({
 	 *
 	 * @return Fieldset definition in Form format
 	 */
-	_parseFieldset: function (result, options, spec) {
-		var fields        = [];
-			
-		result.fieldsets[ result.fieldsets.length ] = {
+	_parseFieldset: function (result, options, parent, spec) {
+		var fieldset = {
+			type: 'fieldset',
 			legend: spec.name,
 			help:   spec.description,
-			fields: fields
+			content: []
 		};
 		
-		this._parseCatContent( result, options, fields, spec.content );
+		if ( parent ) {
+			parent.content[ parent.content.length ] = fieldset;
+		} else {
+			result.fieldsets[ result.fieldsets.length ] = fieldset;
+		}
+		
+		this._parseCatContent( result, options, fieldset, spec.content );
 	},
 	
 	/**
@@ -1031,28 +1039,48 @@ Form.validators = (function() {
 
 Form.Fieldset = Backbone.View.extend({
 
-  /**
-   * Constructor
-   *
-   * Valid fieldset schemas:
-   *   ['field1', 'field2']
-   *   { legend: 'Some Fieldset', fields: ['field1', 'field2'] }
-   *
-   * @param {String[]|Object[]} options.schema      Fieldset schema
-   * @param {Object} options.fields           Form fields
-   */
-  initialize: function(options) {
-    options = options || {};
+	/**
+	 * Constructor
+	 *
+	 * Valid fieldset schemas:
+	 *   ['field1', 'field2']
+	 *   { legend: 'Some Fieldset', fields: ['field1', 'field2'] }
+	 *
+	 * @param {String[]|Object[]} options.schema      Fieldset schema
+	 * @param {Object} options.fields           Form fields
+	 */
+	initialize: function(options) {
+		options = options || {};
 
-    //Create the full fieldset schema, merging defaults etc.
-    var schema = this.schema = this.createSchema(options.schema);
+		//Create the full fieldset schema, merging defaults etc.
+		var schema = this.schema = this.createSchema(options.schema);
 
-    //Store the fields for this fieldset
-    this.fields = _.pick(options.fields, schema.fields);
-    
-    //Override defaults
-    this.template = options.template || this.constructor.template;
-  },
+		//Store the fields for this fieldset
+		this.fields = _.pick(options.fields, schema.fields);
+
+		this.content = [];
+		var content = options.schema.content;
+		
+		if ( content ) {
+			for ( var ii = 0; ii < content.length; ii++ ) {
+				if ( content[ii].type == 'fields' ) {
+					var fields = _.pick(options.fields, content[ii].fields);
+					for ( var key in fields ) {
+						this.content[ this.content.length ] = fields[key];
+					} 
+				}
+				else if ( content[ii].type == 'fieldset' ) {
+					this.content[ this.content.length ] = new Form.Fieldset({
+						schema: content[ii],
+						fields: options.fields
+					});
+				}
+			}
+		}
+
+		//Override defaults
+		this.template = options.template || this.constructor.template;
+	},
 
   /**
    * Creates the full fieldset schema, normalising, merging defaults etc.
@@ -1095,34 +1123,38 @@ Form.Fieldset = Backbone.View.extend({
     return this.schema;
   },
 
-  /**
-   * Renders the fieldset and fields
-   *
-   * @return {Fieldset} this
-   */
-  render: function() {
-    var schema = this.schema,
-        fields = this.fields;
+	/**
+	 * Renders the fieldset and fields
+	 *
+	 * @return {Fieldset} this
+	 */
+	render: function() {
+		var schema  = this.schema;
+		var fields  = this.fields;
+		var content = this.content;
 
-    //Render fieldset
-    var $fieldset = $($.trim(this.template(_.result(this, 'templateData'))));
+		//Render fieldset
+		var $fieldset = $($.trim(this.template(_.result(this, 'templateData'))));
 
-    //Render fields
-    $fieldset.find('[data-fields]').add($fieldset).each(function(i, el) {
-      var $container = $(el),
-          selection = $container.attr('data-fields');
+		//Render fields
+		$fieldset.find('[data-fields]').add($fieldset).each(function(i, el) {
+			var $container = $(el),
+			selection = $container.attr('data-fields');
 
-      if (_.isUndefined(selection)) return;
+			if (_.isUndefined(selection)) return;
 
-      _.each(fields, function(field) {
-        $container.append(field.render().el);
-      });
-    });
+			_.each(fields, function(field) {
+				$container.append(field.render().el);
+			});
+			_.each(content, function(item) {
+				$container.append(item.render().el);
+			});
+		});
 
-    this.setElement($fieldset);
+		this.setElement($fieldset);
 
-    return this;
-  },
+		return this;
+	},
 
   /**
    * Remove embedded views then self
