@@ -25,6 +25,7 @@ var Form = Backbone.View.extend({
 		
 		this._chosen_editors = [];
 		this._submitHandler = null;
+		this.dependencyClass = options.dependencyClass || '';
 
 		//Find the schema to use
 		var schema = this.schema = (function() {
@@ -78,21 +79,22 @@ var Form = Backbone.View.extend({
 		this.setSubmitHandler( options.onSubmit );
 	},
 
-  /**
-   * Creates a Fieldset instance
-   *
-   * @param {String[]|Object[]} schema       Fieldset schema
-   *
-   * @return {Form.Fieldset}
-   */
-  createFieldset: function(schema) {
-    var options = {
-      schema: schema,
-      fields: this.fields
-    };
+	/**
+	* Creates a Fieldset instance
+	*
+	* @param {String[]|Object[]} schema       Fieldset schema
+	*
+	* @return {Form.Fieldset}
+	*/
+	createFieldset: function(schema) {
+		var options = {
+			dependencyClass: this.dependencyClass,
+			schema: schema,
+			fields: this.fields
+		};
 
-    return new this.Fieldset(options, this);
-  },
+		return new this.Fieldset(options, this);
+	},
 
   /**
    * Creates a Field instance

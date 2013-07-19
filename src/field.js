@@ -5,36 +5,43 @@
 
 Form.Field = Backbone.View.extend({
 
-  /**
-   * Constructor
-   * 
-   * @param {Object} options.key
-   * @param {Object} options.form
-   * @param {Object} [options.schema]
-   * @param {Function} [options.schema.template]
-   * @param {Backbone.Model} [options.model]
-   * @param {Object} [options.value]
-   * @param {String} [options.idPrefix]
-   * @param {Function} [options.template]
-   * @param {Function} [options.errorClassName]
-   */
-  initialize: function(options) {
-    options = options || {};
+	/**
+	 * Constructor
+	 * 
+	 * @param {Object} options.key
+	 * @param {Object} options.form
+	 * @param {Object} [options.schema]
+	 * @param {Function} [options.schema.template]
+	 * @param {Backbone.Model} [options.model]
+	 * @param {Object} [options.value]
+	 * @param {String} [options.idPrefix]
+	 * @param {Function} [options.template]
+	 * @param {Function} [options.errorClassName]
+	 */
+	initialize: function(options) {
+		options = options || {};
 
-    //Store important data
-    _.extend(this, _.pick(options, 'form', 'key', 'model', 'value', 'idPrefix'));
+		//Store important data
+		_.extend(this, _.pick(options, 'form', 'key', 'model', 'value', 'idPrefix'));
 
-    //Create the full field schema, merging defaults etc.
-    var schema = this.schema = this.createSchema(options.schema);
+		//Create the full field schema, merging defaults etc.
+		var schema = this.schema = this.createSchema(options.schema);
 
-    //Override defaults
-    this.template = options.template || schema.template || this.constructor.template;
-    this.errorClassName = options.errorClassName || this.constructor.errorClassName;
-	this.dependants = [];
+		//Override defaults
+		this.template = options.template || schema.template || this.constructor.template;
+		this.errorClassName = options.errorClassName || this.constructor.errorClassName;
+		this.dependants = [];
 
-    //Create editor
-    this.editor = this.createEditor();
-  },
+		//Create editor
+		this.editor = this.createEditor();
+		var self = this;
+		this.editor.on('change', function() {
+			var value = this.getValue();
+			_.each(self.dependants, function (fieldset) {
+				fieldset.$el.toggleClass('active', value);
+			});
+		});
+	},
 
   /**
    * Creates the full field schema, merging defaults etc.

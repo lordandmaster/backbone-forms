@@ -25,6 +25,9 @@ Form.Fieldset = Backbone.View.extend({
 
 		//Store the fields for this fieldset
 		this.fields = _.pick(options.fields, schema.fields);
+		
+		this.dependencyClass = options.dependencyClass;
+		this.cssClass = options.cssClass || '';
 
 		this.content = [];
 		var content = options.schema.content;
@@ -37,6 +40,7 @@ Form.Fieldset = Backbone.View.extend({
 				}
 				else if ( item.type == 'fieldset' ) {
 					self.content[ self.content.length ] = new Form.Fieldset({
+						dependencyClass: self.dependencyClass,
 						schema: item,
 						fields: options.fields
 					});
@@ -63,10 +67,12 @@ Form.Fieldset = Backbone.View.extend({
 		
 		_.each(fieldsets, function (fieldset) {
 			dependants[ dependants.length ] = new Form.Fieldset({
+				dependencyClass: this.dependencyClass,
+				cssClass: this.dependencyClass,
 				schema: fieldset,
 				fields: fields_ref
 			});
-		});
+		}, this);
 	},
 
   /**
@@ -122,6 +128,8 @@ Form.Fieldset = Backbone.View.extend({
 
 		//Render fieldset
 		var $fieldset = $($.trim(this.template(_.result(this, 'templateData'))));
+		
+		$fieldset.addClass( this.cssClass );
 
 		//Render fields
 		$fieldset.find('[data-fields]').add($fieldset).each(function(i, el) {
