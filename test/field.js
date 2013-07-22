@@ -33,7 +33,7 @@ test('stores important options', function() {
     model: new Backbone.Model(),
     value: { foo: 1 },
     idPrefix: 'foo'
-  }
+  };
 
   var field = new Field(options);
 
@@ -562,6 +562,50 @@ test('Removes self', function() {
 
   //Called once for editor and once for field:
   same(Backbone.View.prototype.remove.callCount, 2);
+});
+
+
+
+module('Field#setSchemaAttr', {
+	setup: function() {
+		this.sinon = sinon.sandbox.create();
+	},
+	
+	teardown: function() {
+		this.sinon.restore();
+	}
+});
+
+test('Changes attribute', function() {
+	var field = new Field({ key: 'title' });
+	field.setSchemaAttr( 'attr', 3 );
+	
+	same( field.schema.schemaAttrs.attr, 3 );
+});
+
+test('Renders new attribute', function() {
+	var field = new Field({
+		key: 'title',
+		schema: {
+			type: 'Checkbox',
+			template: function(data) {
+				return '<span>' + data.schemaAttrs.test + '</span>';
+			},
+			schemaAttrs: {
+				test: 7
+			}
+		}
+	});
+	
+	var div = $('<div/>');
+	div.html( field.render().$el );
+	
+	same(cleanse(field.$el.html()), '7');
+	
+	field.setSchemaAttr( 'test', 3 );
+	
+	same(cleanse(field.$el.html()), '3');
+	same(cleanse(div.html()), '<span>3</span>');
 });
 
 

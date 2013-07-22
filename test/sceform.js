@@ -791,7 +791,15 @@ test('removes fieldsets, fields and self', function() {
 
 
 
-module('SceForm#submit');
+module('SceForm#submit', {
+	setup: function() {
+		this.sinon = sinon.sandbox.create();
+	},
+	
+	teardown: function() {
+		this.sinon.restore();
+	}
+});
 
 test('Creates submit button', function() {
 	var caught = false;
@@ -830,6 +838,23 @@ test('Creates submit button', function() {
 	same(cleanse(btn2.parent()[0].className), 'hello');
 	same(cleanse(btn3.parent()[0].className), 'hello');
 	
+});
+
+test('Dynamically displays errors', function() {
+	this.sinon.spy( SceForm.Field.prototype, 'setSchemaAttr' );
+	
+	var form = new SceForm({
+		fieldTemplate: function() { return '<span>' + data.schemaAttrs.errortext + '</span>'; },
+		schema: { title: {} }
+	});
+	
+	form.render();
+	form.setErrors({ title: 'error' });
+	
+	var func = SceForm.Field.prototype.setSchemaAttr;
+	
+	same(func.callCount, 1);
+	same(func.args[0], [ 'errortext', 'error' ]);
 });
 
 })(Backbone.SceForm);

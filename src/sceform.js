@@ -68,7 +68,7 @@ var SceForm = Form.extend({
 			this._submitView = $field;
 		}
 		
-		SceForm.__super__.initialize.call(this, form_options);
+		this.constructor.__super__.initialize.call(this, form_options);
 		
 	},
 	
@@ -76,7 +76,7 @@ var SceForm = Form.extend({
 	 * Add the rendered submit UI if present
 	 */
 	render: function () {
-		SceForm.__super__.render.call(this);
+		this.constructor.__super__.render.call(this);
 		
 		var container = this.$el.find('[data-fieldsets]');
 		if ( !container.length ) container = this.$el;
@@ -90,13 +90,28 @@ var SceForm = Form.extend({
 	},
 	
 	/**
+	 * Sets errors onto a set of fields and re-renders the changed fields.
+	 *
+	 * @param Hash of field_name => [error_messages] pairs.
+	 */
+	setErrors: function (errors) {
+		for ( var key in errors ) {
+			if ( !this.fields[key] ) {
+				throw new Error("Unknown field '" + key + "'");
+			}
+			this.fields[key].setSchemaAttr( 'errortext', errors[key] );
+			this.fields[key].render().$el;
+		}
+	},
+	
+	/**
 	 * Get a Form spec from the SceForm spec
 	 *
 	 * @param {Object} @see options from initialize()
 	 *
 	 * @return spec in Form format
 	 */
-	mapSceSpecsToForm: function ( options ) {
+	mapSceSpecsToForm: function (options) {
 		if ( !options || !options.specs ) {
 			return {};
 		}
@@ -328,13 +343,13 @@ var SceForm = Form.extend({
 	_getFieldOptions: function (sce_field, options) {
 		var result = _.pickDefaults(
 			['addEmptySelectOption', 'useChosen', 'chosenOptions'],
-			sce_field, options, SceForm.DEFAULTS
+			sce_field, options, this.constructor.DEFAULTS
 		);
 		
 		result.fieldTemplate =_.firstDefined(
 			sce_field.template,
 			options.fieldTemplate,
-			SceForm.Field.template
+			this.constructor.Field.template
 		);
 		
 		return result;
