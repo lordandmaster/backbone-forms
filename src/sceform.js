@@ -95,13 +95,14 @@ var SceForm = Form.extend({
 	 * @param Hash of field_name => [error_messages] pairs.
 	 */
 	setErrors: function (errors) {
-		for ( var key in errors ) {
+		_.each(errors, function (error, key) {
 			if ( !this.fields[key] ) {
 				throw new Error("Unknown field '" + key + "'");
 			}
-			this.fields[key].setSchemaAttr( 'errortext', errors[key] );
-			this.fields[key].render().$el;
-		}
+			
+			var text = (error instanceof Array) ? error.join('<br/>') : error;
+			this.fields[key].setSchemaAttr( 'errortext', text );
+		}, this);
 	},
 	
 	/**

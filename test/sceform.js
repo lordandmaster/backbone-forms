@@ -856,11 +856,26 @@ test('Dynamically displays errors', function() {
 	same(func.callCount, 1);
 	same(func.args[0], [ 'errortext', 'error' ]);
 	
-	form.setErrors({ title: 'hi', name: 'bye' });
+	form.setErrors({ title: 'hi', name: ['bye', 'bye'] });
 	
 	same(func.callCount, 3);
-	same(func.args[1][1], 'hi');
-	same(func.args[2][1], 'bye');
+	same(cleanse(func.args[1][1]), 'hi');
+	same(cleanse(func.args[2][1]), 'bye<br/>bye');
+});
+
+test('Wrong attribute throws error', function() {
+	var caught = false;
+	
+	var form = new SceForm();
+	
+	try {
+		form.setErrors({ title: 'ok' });
+	}
+	catch (e) {
+		caught = e.message;
+	}
+	
+	same(caught, "Unknown field 'title'");
 });
 
 })(Backbone.SceForm);
