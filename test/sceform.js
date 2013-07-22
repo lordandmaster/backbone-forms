@@ -845,7 +845,7 @@ test('Dynamically displays errors', function() {
 	
 	var form = new SceForm({
 		fieldTemplate: function() { return '<span>' + data.schemaAttrs.errortext + '</span>'; },
-		schema: { title: {} }
+		schema: { title: {}, name: {} }
 	});
 	
 	form.render();
@@ -855,6 +855,12 @@ test('Dynamically displays errors', function() {
 	
 	same(func.callCount, 1);
 	same(func.args[0], [ 'errortext', 'error' ]);
+	
+	form.setErrors({ title: 'hi', name: 'bye' });
+	
+	same(func.callCount, 3);
+	same(func.args[1][1], 'hi');
+	same(func.args[2][1], 'bye');
 });
 
 })(Backbone.SceForm);
