@@ -601,7 +601,7 @@ var SceForm = Form.extend({
 			this._submitView = $field;
 		}
 		
-		SceForm.__super__.initialize.call(this, form_options);
+		this.constructor.__super__.initialize.call(this, form_options);
 		
 	},
 	
@@ -609,7 +609,7 @@ var SceForm = Form.extend({
 	 * Add the rendered submit UI if present
 	 */
 	render: function () {
-		SceForm.__super__.render.call(this);
+		this.constructor.__super__.render.call(this);
 		
 		var container = this.$el.find('[data-fieldsets]');
 		if ( !container.length ) container = this.$el;
@@ -623,13 +623,29 @@ var SceForm = Form.extend({
 	},
 	
 	/**
+	 * Sets errors onto a set of fields and re-renders the changed fields.
+	 *
+	 * @param Hash of field_name => [error_messages] pairs.
+	 */
+	setErrors: function (errors) {
+		_.each(errors, function (error, key) {
+			if ( !this.fields[key] ) {
+				throw new Error("Unknown field '" + key + "'");
+			}
+			
+			var text = (error instanceof Array) ? error.join('<br/>') : error;
+			this.fields[key].setSchemaAttr( 'errortext', text );
+		}, this);
+	},
+	
+	/**
 	 * Get a Form spec from the SceForm spec
 	 *
 	 * @param {Object} @see options from initialize()
 	 *
 	 * @return spec in Form format
 	 */
-	mapSceSpecsToForm: function ( options ) {
+	mapSceSpecsToForm: function (options) {
 		if ( !options || !options.specs ) {
 			return {};
 		}
@@ -861,13 +877,13 @@ var SceForm = Form.extend({
 	_getFieldOptions: function (sce_field, options) {
 		var result = _.pickDefaults(
 			['addEmptySelectOption', 'useChosen', 'chosenOptions'],
-			sce_field, options, SceForm.DEFAULTS
+			sce_field, options, this.constructor.DEFAULTS
 		);
 		
 		result.fieldTemplate =_.firstDefined(
 			sce_field.template,
 			options.fieldTemplate,
-			SceForm.Field.template
+			this.constructor.Field.template
 		);
 		
 		return result;
@@ -1112,46 +1128,46 @@ Form.Fieldset = Backbone.View.extend({
 		}, this);
 	},
 
-  /**
-   * Creates the full fieldset schema, normalising, merging defaults etc.
-   *
-   * @param {String[]|Object[]} schema
-   *
-   * @return {Object}
-   */
-  createSchema: function(schema) {
-    //Normalise to object
-    if (_.isArray(schema)) {
-      schema = { fields: schema };
-    }
+	/**
+	* Creates the full fieldset schema, normalising, merging defaults etc.
+	*
+	* @param {String[]|Object[]} schema
+	*
+	* @return {Object}
+	*/
+	createSchema: function(schema) {
+		//Normalise to object
+		if (_.isArray(schema)) {
+			schema = { fields: schema };
+		}
 
-    //Add null legend to prevent template error
-    schema.legend = schema.legend || null;
+		//Add null legend to prevent template error
+		schema.legend = schema.legend || null;
 
-    return schema;
-  },
+		return schema;
+	},
 
-  /**
-   * Returns the field for a given index
-   *
-   * @param {Number} index
-   *
-   * @return {Field}
-   */
-  getFieldAt: function(index) {
-    var key = this.schema.fields[index];
+	/**
+	 * Returns the field for a given index
+	 *
+	 * @param {Number} index
+	 *
+	 * @return {Field}
+	 */
+	getFieldAt: function(index) {
+		var key = this.schema.fields[index];
 
-    return this.fields[key];
-  },
+		return this.fields[key];
+	},
 
-  /**
-   * Returns data to pass to template
-   *
-   * @return {Object}
-   */
-  templateData: function() {
-    return this.schema;
-  },
+	/**
+	* Returns data to pass to template
+	*
+	* @return {Object}
+	*/
+	templateData: function() {
+		return this.schema;
+	},
 
 	/**
 	 * Renders the fieldset and fields
@@ -1207,16 +1223,16 @@ Form.Fieldset = Backbone.View.extend({
 		return this;
 	},
 
-  /**
-   * Remove embedded views then self
-   */
-  remove: function() {
-    _.each(this.fields, function(field) {
-      field.remove();
-    });
+	/**
+	 * Remove embedded views then self
+	 */
+	remove: function() {
+		_.each(this.fields, function(field) {
+			field.remove();
+		});
 
-    Backbone.View.prototype.remove.call(this);
-  }
+		Backbone.View.prototype.remove.call(this);
+	}
   
 }, {
   //STATICS
@@ -1277,30 +1293,30 @@ Form.Field = Backbone.View.extend({
 		});
 	},
 
-  /**
-   * Creates the full field schema, merging defaults etc.
-   *
-   * @param {Object|String} schema
-   *
-   * @return {Object}
-   */
-  createSchema: function(schema) {
-    if (_.isString(schema)) schema = { type: schema };
+	/**
+	* Creates the full field schema, merging defaults etc.
+	*
+	* @param {Object|String} schema
+	*
+	* @return {Object}
+	*/
+	createSchema: function(schema) {
+		if (_.isString(schema)) schema = { type: schema };
 
-    //Set defaults
-    schema = _.extend({
-      type: 'Text',
-      title: this.createTitle()
-    }, schema);
-	
-	if ( !schema.schemaAttrs ) schema.schemaAttrs = {};
+		//Set defaults
+		schema = _.extend({
+			type: 'Text',
+			title: this.createTitle()
+		}, schema);
 
-	this.typeName = schema.type;
-    //Get the real constructor function i.e. if type is a string such as 'Text'
-    schema.type = (_.isString(schema.type)) ? Form.editors[schema.type] : schema.type;
+		if ( !schema.schemaAttrs ) schema.schemaAttrs = {};
 
-    return schema;
-  },
+		this.typeName = schema.type;
+		//Get the real constructor function i.e. if type is a string such as 'Text'
+		schema.type = (_.isString(schema.type)) ? Form.editors[schema.type] : schema.type;
+
+		return schema;
+	},
 
 	/**
 	* Creates the editor specified in the schema; either an editor string name or
@@ -1323,65 +1339,65 @@ Form.Field = Backbone.View.extend({
 		return new constructorFn(options);
 	},
 
-  /**
-   * Creates the ID that will be assigned to the editor
-   *
-   * @return {String}
-   */
-  createEditorId: function() {
-    var prefix = this.idPrefix,
-        id = this.key;
+	/**
+	 * Creates the ID that will be assigned to the editor
+	 *
+	 * @return {String}
+	 */
+	createEditorId: function() {
+		var prefix = this.idPrefix,
+		id = this.key;
 
-    //Replace periods with underscores (e.g. for when using paths)
-    id = id.replace(/\./g, '_');
+		//Replace periods with underscores (e.g. for when using paths)
+		id = id.replace(/\./g, '_');
 
-    //If a specific ID prefix is set, use it
-    if (_.isString(prefix) || _.isNumber(prefix)) return prefix + id;
-    if (_.isNull(prefix)) return id;
+		//If a specific ID prefix is set, use it
+		if (_.isString(prefix) || _.isNumber(prefix)) return prefix + id;
+		if (_.isNull(prefix)) return id;
 
-    //Otherwise, if there is a model use it's CID to avoid conflicts when multiple forms are on the page
-    if (this.model) return this.model.cid + '_' + id;
+		//Otherwise, if there is a model use it's CID to avoid conflicts when multiple forms are on the page
+		if (this.model) return this.model.cid + '_' + id;
 
-    return id;
-  },
+		return id;
+	},
 
-  /**
-   * Create the default field title (label text) from the key name.
-   * (Converts 'camelCase' to 'Camel Case')
-   *
-   * @return {String}
-   */
-  createTitle: function() {
-    var str = this.key;
+	/**
+	 * Create the default field title (label text) from the key name.
+	 * (Converts 'camelCase' to 'Camel Case')
+	 *
+	 * @return {String}
+	 */
+	createTitle: function() {
+		var str = this.key;
 
-    //Add spaces
-    str = str.replace(/([A-Z])/g, ' $1');
+		//Add spaces
+		str = str.replace(/([A-Z])/g, ' $1');
 
-    //Uppercase first character
-    str = str.replace(/^./, function(str) { return str.toUpperCase(); });
+		//Uppercase first character
+		str = str.replace(/^./, function(str) { return str.toUpperCase(); });
 
-    return str;
-  },
+		return str;
+	},
 
-  /**
-   * Returns the data to be passed to the template
-   *
-   * @return {Object}
-   */
-  templateData: function() {
-    var schema = this.schema;
+	/**
+	 * Returns the data to be passed to the template
+	 *
+	 * @return {Object}
+	 */
+	templateData: function() {
+		var schema = this.schema;
 
-    return {
-      help: schema.help || '',
-      title: schema.title,
-      fieldAttrs: schema.fieldAttrs,
-      editorAttrs: schema.editorAttrs,
-	  schemaAttrs: schema.schemaAttrs,
-      key: this.key,
-      editorId: this.editor.id,
-	  editorType: this.typeName
-    };
-  },
+		return {
+			help: schema.help || '',
+			title: schema.title,
+			fieldAttrs: schema.fieldAttrs,
+			editorAttrs: schema.editorAttrs,
+			schemaAttrs: schema.schemaAttrs,
+			key: this.key,
+			editorId: this.editor.id,
+			editorType: this.typeName
+		};
+	},
 
 	/**
 	 * Render the field and editor
@@ -1416,104 +1432,126 @@ Form.Field = Backbone.View.extend({
 			$field.append( fieldset.render().el );
 		});
 		
+		this.$el.remove();
 		this.setElement($field);
 
 		return this;
 	},
+	
+	/**
+	 * Change a SchemaAttr setting and update the display
+	 *
+	 * @param Attribute key
+	 * @param New value
+	 */
+	setSchemaAttr: function (attribute, value) {
+		this.schema.schemaAttrs[attribute] = value;
+		
+		// Re-render
+		var next = this.$el.next();
+		var parent = this.$el.parent();
+		this.$el.remove();
+		
+		if ( next.length < 1 ) {
+			parent.append( this.render().$el );
+		} else {
+			this.render().$el.insertBefore( next );
+		}
+	},
 
-  /**
-   * Check the validity of the field
-   *
-   * @return {String}
-   */
-  validate: function() {
-    var error = this.editor.validate();
+	/**
+	* Check the validity of the field
+	*
+	* @return {String}
+	*/
+	validate: function() {
+		var error = this.editor.validate();
 
-    if (error) {
-      this.setError(error.message);
-    } else {
-      this.clearError();
-    }
+		if (error) {
+			this.setError(error.message);
+		} else {
+			this.clearError();
+		}
 
-    return error;
-  },
+		return error;
+	},
 
-  /**
-   * Set the field into an error state, adding the error class and setting the error message
-   *
-   * @param {String} msg     Error message
-   */
-  setError: function(msg) {
-    //Nested form editors (e.g. Object) set their errors internally
-    if (this.editor.hasNestedForm) return;
+	/**
+	* Set the field into an error state, adding the error class and setting the error message
+	*
+	* @param {String} msg     Error message
+	*/
+	setError: function(msg) {
+		//Nested form editors (e.g. Object) set their errors internally
+		if (this.editor.hasNestedForm) return;
 
-    //Add error CSS class
-    this.$el.addClass(this.errorClassName);
+		//Add error CSS class
+		this.$el.addClass(this.errorClassName);
 
-    //Set error message
-    this.$('[data-error]').html(msg);
-  },
+		//Set error message
+		this.$('[data-error]').html(msg);
+	},
 
-  /**
-   * Clear the error state and reset the help message
-   */
-  clearError: function() {
-    //Remove error CSS class
-    this.$el.removeClass(this.errorClassName);
+	/**
+	* Clear the error state and reset the help message
+	*/
+	clearError: function() {
+		//Remove error CSS class
+		this.$el.removeClass(this.errorClassName);
 
-    //Clear error message
-    this.$('[data-error]').empty();
-  },
+		//Clear error message
+		this.$('[data-error]').empty();
+	},
 
-  /**
-   * Update the model with the new value from the editor
-   *
-   * @return {Mixed}
-   */
-  commit: function() {
-    return this.editor.commit();
-  },
+	/**
+	* Update the model with the new value from the editor
+	*
+	* @return {Mixed}
+	*/
+	commit: function() {
+		return this.editor.commit();
+	},
 
-  /**
-   * Get the value from the editor
-   *
-   * @return {Mixed}
-   */
-  getValue: function() {
-    return this.editor.getValue();
-  },
+	/**
+	* Get the value from the editor
+	*
+	* @return {Mixed}
+	*/
+	getValue: function() {
+		return this.editor.getValue();
+	},
 
-  /**
-   * Set/change the value of the editor
-   *
-   * @param {Mixed} value
-   */
-  setValue: function(value) {
-    this.editor.setValue(value);
-  },
+	/**
+	* Set/change the value of the editor
+	*
+	* @param {Mixed} value
+	*/
+	setValue: function(value) {
+		this.editor.setValue(value);
+	},
 
-  /**
-   * Give the editor focus
-   */
-  focus: function() {
-    this.editor.focus();
-  },
+	/**
+	* Give the editor focus
+	*/
+	focus: function() {
+		this.editor.focus();
+	},
 
-  /**
-   * Remove focus from the editor
-   */
-  blur: function() {
-    this.editor.blur();
-  },
+	/**
+	* Remove focus from the editor
+	*/
+	blur: function() {
+		this.editor.blur();
+	},
 
-  /**
-   * Remove the field and editor views
-   */
-  remove: function() {
-    this.editor.remove();
+	/**
+	* Remove the field and editor views
+	*/
+	remove: function() {
+		this.editor.remove();
 
-    Backbone.View.prototype.remove.call(this);
-  }
+		Backbone.View.prototype.remove.call(this);
+	}
 
 }, {
   //STATICS

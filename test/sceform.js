@@ -794,6 +794,7 @@ test('removes fieldsets, fields and self', function() {
 module('SceForm#submit', {
 	setup: function() {
 		this.sinon = sinon.sandbox.create();
+		this.sinon.spy( SceForm.Field.prototype, 'setSchemaAttr' );
 	},
 	
 	teardown: function() {
@@ -841,8 +842,6 @@ test('Creates submit button', function() {
 });
 
 test('Dynamically displays errors', function() {
-	this.sinon.spy( SceForm.Field.prototype, 'setSchemaAttr' );
-	
 	var form = new SceForm({
 		fieldTemplate: function() { return '<span>' + data.schemaAttrs.errortext + '</span>'; },
 		schema: { title: {}, name: {} }
@@ -865,7 +864,6 @@ test('Dynamically displays errors', function() {
 
 test('Wrong attribute throws error', function() {
 	var caught = false;
-	
 	var form = new SceForm();
 	
 	try {
@@ -876,6 +874,7 @@ test('Wrong attribute throws error', function() {
 	}
 	
 	same(caught, "Unknown field 'title'");
+	same(SceForm.Field.prototype.setSchemaAttr.callCount, 0);
 });
 
 })(Backbone.SceForm);
