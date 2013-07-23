@@ -70,6 +70,8 @@ These use the individual source files. Use this while developing
 	var cleanse = function(str) {
 		return str.toLowerCase().replace(/['"]/g, '');
 	};
+	
+	if ( !console ) var console = { log: function(){} };
 	</script>
 
 	<script src="../src/editors/extra/list.js"></script>
@@ -137,13 +139,13 @@ These use the individual source files. Use this while developing
 		var schema = {
 			email:      {
 				dataType: 'email',
-				validators: ['required', 'email'],
+				validators: ['required', 'email']
 			},
 			tel:        {
 				type: 'Text',
 				dataType: 'tel',
 				validators: ['required'],
-				help: 'Include area code',
+				help: 'Include area code'
 			},
 			number:     { type: 'Number', validators: [/[0-9]+(?:\.[0-9]*)?/] },
 			checkbox:   { type: 'Checkbox' },
@@ -156,7 +158,7 @@ These use the individual source files. Use this while developing
 						group: 'North America', options: [
 							{ val: 'ca', label: 'Canada' },
 							{ val: 'us', label: 'United States' }
-						],
+						]
 					},
 					{
 						group: 'Europe', options: [

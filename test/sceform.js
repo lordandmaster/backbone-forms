@@ -173,7 +173,7 @@ test('Recurses on nested categories', function() {
 						]}]}
 					}
 				]
-			},
+			}
 		}]
 	});
 
@@ -819,13 +819,13 @@ test('Creates submit button', function() {
 	form.render();
 	btn3.click(function() { form.$el.submit(); });
 	
-	caught = false;
+	/*caught = false;
 	btn1.click();
 	same(caught, true);
 	
 	caught = false;
 	btn2.click();
-	same(caught, true);
+	same(caught, true);*/
 	
 	caught = false;
 	btn3.click();
