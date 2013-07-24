@@ -49,7 +49,9 @@ Form.editors.Chosen = Form.editors.Select.extend({
 	},
 	
 	initDisplay: function() {
+		this.$el.closest('.dependent').css('display', 'block');
 		this.$el.chosen( this.chosenOptions );
+		this.$el.closest('.dependent').css('display', '');
 	},
 	
 	remove: function() {

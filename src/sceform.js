@@ -266,7 +266,7 @@ var SceForm = Form.extend({
 	 * @param @see params from _parseField (these should always be identical)
 	 */
 	_parseRangeField: function (fields, result, options, sce_field) {
-		var makeRangeField = function(name, label, cvindex) {
+		/*var makeRangeField = function(name, label, cvindex) {
 			var name  = sce_field.name + name;
 			var label = sce_field.label + label;
 			var value = (sce_field.current_value) ? sce_field.current_value[cvindex] : null;
@@ -279,7 +279,8 @@ var SceForm = Form.extend({
 		};
 		
 		makeRangeField('_min', ' Min', 0);
-		makeRangeField('_max', ' Max', 1);
+		makeRangeField('_max', ' Max', 1);*/
+		return this._parseNormalField(fields, result, options, sce_field);
 	},
 	
 	/**
@@ -384,6 +385,8 @@ var SceForm = Form.extend({
 					type: options.useChosen ? 'Chosen' : 'Checkboxes',
 					chosenOptions: options.chosenOptions
 				};
+			case 'range':
+				return { type: 'Range' };
 			case 'text':
 				return { type: 'Text' };
 			case 'textarea':

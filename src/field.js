@@ -38,7 +38,11 @@ Form.Field = Backbone.View.extend({
 		this.editor.on('change', function() {
 			var value = this.getValue();
 			_.each(self.dependants, function (fieldset) {
-				fieldset.$el.toggleClass('active', value);
+				if ( value ) {
+					fieldset.$el.addClass('active');
+				} else {
+					fieldset.$el.removeClass('active');
+				}
 			});
 		});
 	},

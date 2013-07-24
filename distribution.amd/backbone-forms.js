@@ -272,6 +272,7 @@ var Form = Backbone.View.extend({
 	var submit = this._submitHandler;
 	if ( typeof submit == 'function' ) {
 		$form.submit(function(e) {
+			self.commit();
 			return submit.call(self, e);
 		});
 	}
@@ -799,7 +800,7 @@ var SceForm = Form.extend({
 	 * @param @see params from _parseField (these should always be identical)
 	 */
 	_parseRangeField: function (fields, result, options, sce_field) {
-		var makeRangeField = function(name, label, cvindex) {
+		/*var makeRangeField = function(name, label, cvindex) {
 			var name  = sce_field.name + name;
 			var label = sce_field.label + label;
 			var value = (sce_field.current_value) ? sce_field.current_value[cvindex] : null;
@@ -812,7 +813,8 @@ var SceForm = Form.extend({
 		};
 		
 		makeRangeField('_min', ' Min', 0);
-		makeRangeField('_max', ' Max', 1);
+		makeRangeField('_max', ' Max', 1);*/
+		return this._parseNormalField(fields, result, options, sce_field);
 	},
 	
 	/**
@@ -917,6 +919,8 @@ var SceForm = Form.extend({
 					type: options.useChosen ? 'Chosen' : 'Checkboxes',
 					chosenOptions: options.chosenOptions
 				};
+			case 'range':
+				return { type: 'Range' };
 			case 'text':
 				return { type: 'Text' };
 			case 'textarea':
@@ -1288,7 +1292,11 @@ Form.Field = Backbone.View.extend({
 		this.editor.on('change', function() {
 			var value = this.getValue();
 			_.each(self.dependants, function (fieldset) {
-				fieldset.$el.toggleClass('active', value);
+				if ( value ) {
+					fieldset.$el.addClass('active');
+				} else {
+					fieldset.$el.removeClass('active');
+				}
 			});
 		});
 	},
@@ -2311,7 +2319,9 @@ Form.editors.Chosen = Form.editors.Select.extend({
 	},
 	
 	initDisplay: function() {
+		this.$el.closest('.dependent').css('display', 'block');
 		this.$el.chosen( this.chosenOptions );
+		this.$el.closest('.dependent').css('display', '');
 	},
 	
 	remove: function() {
@@ -2495,6 +2505,61 @@ Form.editors.Checkboxes = Form.editors.Select.extend({
 
 });
 
+
+Form.editors.Range = Form.editors.Base.extend({
+
+	initialize: function (options) {
+		this.value = [];
+		
+		Form.editors.Base.prototype.initialize.call( this, options );
+	},
+	
+	render: function() {
+		var html = '<input type="text"/><span> to </span><input type="text"/>';
+		this.$el.html( html );
+		return this;
+	},
+	
+	/**
+	 * Sets the value of the form element
+	 *
+	 * @return Number[]
+	 */
+	getValue: function() {
+		var inputs = this.$el.children('input');
+		
+		return [ inputs[0].value, inputs[1].value ];
+	},
+	
+	/**
+	 * Sets the value of the form element
+	 *
+	 * @param Number[]
+	 */
+	setValue: function (value) {
+		var inputs = this.$el.children('input');
+		
+		inputs[0].value = value[0];
+		inputs[1].value = value[1];
+	},
+	
+	focus: function() {
+		if ( this.hasFocus) return;
+		
+		this.$el.children(':first-child').focus();
+	},
+	
+	blur: function() {
+		if ( !this.hasFocus) return;
+		
+		this.$el.children(':first-child').blur();
+	},
+	
+	select: function() {
+		this.$el.children(':first-child').select();
+	}
+
+});
 /**
  * Object editor
  *

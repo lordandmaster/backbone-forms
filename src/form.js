@@ -460,6 +460,10 @@ var Form = Backbone.View.extend({
 		method = method || 'html';
 		$(parent)[method]( this.render().el );
 		this.initChosens();
+		
+		// _.each(this.fields, function (field, key) {
+			// field.setValue( field.value );
+		// });
 	},
 	
 	/**
