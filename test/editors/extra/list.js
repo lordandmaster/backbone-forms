@@ -809,7 +809,7 @@ test('renderSummary()', function() {
 
     editor.renderSummary();
 
-    equal(editor.$el.html(), '<div>Id: 1<br>Name: foo</div>');
+    equal(cleanse(editor.$el.html()), '<div>id: 1<br>name: foo</div>');
 });
 
 test('itemToString() - formats an object', function() {

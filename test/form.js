@@ -412,12 +412,12 @@ module('Form#render', {
     this.sinon = sinon.sandbox.create();
 
     this.sinon.stub(Form.editors.Text.prototype, 'render', function() {
-      this.setElement($('<input class="'+this.key+'" />'));
+      this.setElement($('<input class="'+this.key+'"></field>'));
       return this;
     });
 
     this.sinon.stub(Form.Field.prototype, 'render', function() {
-      this.setElement($('<field class="'+this.key+'" />'));
+      this.setElement($('<field class="'+this.key+'"></field>'));
       return this;
     });
 

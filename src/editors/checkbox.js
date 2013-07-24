@@ -27,15 +27,6 @@ Form.editors.Checkbox = Form.editors.Base.extend({
     this.$el.attr('type', 'checkbox');
   },
 
-  /**
-   * Adds the editor to the DOM
-   */
-  render: function() {
-    this.setValue(this.value);
-
-    return this;
-  },
-
   getValue: function() {
     return this.$el.prop('checked');
   },

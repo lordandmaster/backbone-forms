@@ -96,151 +96,152 @@ var Form = Backbone.View.extend({
 		return new this.Fieldset(options, this);
 	},
 
-  /**
-   * Creates a Field instance
-   *
-   * @param {String} key
-   * @param {Object} schema       Field schema
-   *
-   * @return {Form.Field}
-   */
-  createField: function(key, schema) {
-    var options = {
-      form: this,
-      key: key,
-      schema: schema,
-      idPrefix: this.idPrefix
-    };
+	/**
+	 * Creates a Field instance
+	 *
+	 * @param {String} key
+	 * @param {Object} schema       Field schema
+	 *
+	 * @return {Form.Field}
+	 */
+	createField: function(key, schema) {
+		var options = {
+			form: this,
+			key: key,
+			schema: schema,
+			idPrefix: this.idPrefix
+		};
 
-    if (this.model) {
-      options.model = this.model;
-    } else if (this.data) {
-      options.value = this.data[key];
-    } else {
-      options.value = null;
-    }
+		if (this.model) {
+			options.model = this.model;
+		} else if (this.data) {
+			options.value = this.data[key];
+		} else {
+			options.value = null;
+		}
 
-    var field = new this.Field(options);
+		var field = new this.Field(options);
 
-    this.listenTo(field.editor, 'all', this.handleEditorEvent);
-	
-	if ( schema && schema.type == 'Chosen' ) {
-		this._chosen_editors[ this._chosen_editors.length ] = field.editor;
-	}
+		this.listenTo(field.editor, 'all', this.handleEditorEvent);
 
-    return field;
-  },
+		if ( schema && schema.type == 'Chosen' ) {
+			this._chosen_editors[ this._chosen_editors.length ] = field.editor;
+		}
 
-  /**
-   * Callback for when an editor event is fired.
-   * Re-triggers events on the form as key:event and triggers additional form-level events
-   *
-   * @param {String} event
-   * @param {Editor} editor
-   */
-  handleEditorEvent: function(event, editor) {
-    //Re-trigger editor events on the form
-    var formEvent = editor.key+':'+event;
+		return field;
+	},
 
-    this.trigger.call(this, formEvent, this, editor);
+	/**
+	 * Callback for when an editor event is fired.
+	 * Re-triggers events on the form as key:event and triggers additional form-level events
+	 *
+	 * @param {String} event
+	 * @param {Editor} editor
+	 */
+	handleEditorEvent: function(event, editor) {
+		//Re-trigger editor events on the form
+		var formEvent = editor.key+':'+event;
 
-    //Trigger additional events
-    switch (event) {
-      case 'change':
-        this.trigger('change', this);
-        break;
+		this.trigger.call(this, formEvent, this, editor);
 
-      case 'focus':
-        if (!this.hasFocus) this.trigger('focus', this);
-        break;
+		//Trigger additional events
+		switch (event) {
+			case 'change':
+				this.trigger('change', this);
+				break;
 
-      case 'blur':
-        if (this.hasFocus) {
-          //TODO: Is the timeout etc needed?
-          var self = this;
-          setTimeout(function() {
-            var focusedField = _.find(self.fields, function(field) {
-              return field.editor.hasFocus;
-            });
+			case 'focus':
+				if (!this.hasFocus) this.trigger('focus', this);
+				break;
 
-            if (!focusedField) self.trigger('blur', self);
-          }, 0);
-        }
-        break;
-    }
-  },
+			case 'blur':
+				if (this.hasFocus) {
+					//TODO: Is the timeout etc needed?
+					var self = this;
+					_.defer(function() {
+						var focusedField = _.find(self.fields, function(field) {
+							return field.editor.hasFocus;
+						});
 
-  render: function() {
-    var self = this,
-        fields = this.fields;
+						if (!focusedField) self.trigger('blur', self);
+					});
+				}
+				break;
+		}
+	},
 
-    //Render form
-    var $form = $($.trim(this.template(_.result(this, 'templateData'))));
+	render: function() {
+		var self = this,
+		fields = this.fields;
 
-    //Render standalone editors
-    $form.find('[data-editors]').add($form).each(function(i, el) {
-      var $container = $(el),
-          selection = $container.attr('data-editors');
+		//Render form
+		var $form = $($.trim(this.template(_.result(this, 'templateData'))));
 
-      if (_.isUndefined(selection)) return;
+		//Render standalone editors
+		$form.find('[data-editors]').add($form).each(function(i, el) {
+			var $container = $(el),
+			selection = $container.attr('data-editors');
 
-      //Work out which fields to include
-      var keys = (selection == '*')
-        ? self.selectedFields || _.keys(fields)
-        : selection.split(',');
+			if (_.isUndefined(selection)) return;
 
-      //Add them
-      _.each(keys, function(key) {
-        var field = fields[key];
+			//Work out which fields to include
+			var keys = (selection == '*')
+				? self.selectedFields || _.keys(fields)
+				: selection.split(',');
 
-        $container.append(field.editor.render().el);
-      });
-    });
+			//Add them
+			_.each(keys, function(key) {
+				var field = fields[key];
 
-    //Render standalone fields
-    $form.find('[data-fields]').add($form).each(function(i, el) {
-      var $container = $(el),
-          selection = $container.attr('data-fields');
-
-      if (_.isUndefined(selection)) return;
-
-      //Work out which fields to include
-      var keys = (selection == '*')
-        ? self.selectedFields || _.keys(fields)
-        : selection.split(',');
-
-      //Add them
-      _.each(keys, function(key) {
-        var field = fields[key];
-
-        $container.append(field.render().el);
-      });
-    });
-
-    //Render fieldsets
-    $form.find('[data-fieldsets]').add($form).each(function(i, el) {
-      var $container = $(el),
-          selection = $container.attr('data-fieldsets');
-
-      if (_.isUndefined(selection)) return;
-
-      _.each(self.fieldsets, function(fieldset) {
-        $container.append(fieldset.render().el);
-      });
-    });
-	
-	var submit = this._submitHandler;
-	if ( typeof submit == 'function' ) {
-		$form.submit(function(e) {
-			return submit.call(self, e);
+				$container.append(field.editor.render().el);
+			});
 		});
-	}
 
-    //Set the main element
-    this.setElement($form);
+		//Render standalone fields
+		$form.find('[data-fields]').add($form).each(function(i, el) {
+		var $container = $(el),
+		selection = $container.attr('data-fields');
 
-    return this;
-  },
+		if (_.isUndefined(selection)) return;
+
+		//Work out which fields to include
+		var keys = (selection == '*')
+			? self.selectedFields || _.keys(fields)
+			: selection.split(',');
+
+		//Add them
+		_.each(keys, function(key) {
+			var field = fields[key];
+
+			$container.append(field.render().el);
+			});
+		});
+
+		//Render fieldsets
+		$form.find('[data-fieldsets]').add($form).each(function(i, el) {
+			var $container = $(el),
+			selection = $container.attr('data-fieldsets');
+
+			if (_.isUndefined(selection)) return;
+
+			_.each(self.fieldsets, function(fieldset) {
+				$container.append(fieldset.render().el);
+			});
+		});
+
+		// Setup the form.submit handler
+		var submit = this._submitHandler;
+		if ( typeof submit == 'function' ) {
+			$form.submit(function(e) {
+				return submit.call(self, e);
+			});
+		}
+
+		//Set the main element
+		this.setElement($form);
+
+		return this;
+	},
 
   /**
    * Validate the data
@@ -460,10 +461,6 @@ var Form = Backbone.View.extend({
 		method = method || 'html';
 		$(parent)[method]( this.render().el );
 		this.initChosens();
-		
-		// _.each(this.fields, function (field, key) {
-			// field.setValue( field.value );
-		// });
 	},
 	
 	/**
@@ -480,17 +477,17 @@ var Form = Backbone.View.extend({
 
 }, {
 
-  //STATICS
-  template: _.template('\
-    <form data-fieldsets></form>\
-  ', null, this.templateSettings),
+	//STATICS
+	template: _.template('\
+		<form data-fieldsets></form>\
+	', null, this.templateSettings),
 
-  templateSettings: {
-    evaluate: /<%([\s\S]+?)%>/g, 
-    interpolate: /<%=([\s\S]+?)%>/g, 
-    escape: /<%-([\s\S]+?)%>/g
-  },
+	templateSettings: {
+		evaluate: /<%([\s\S]+?)%>/g, 
+		interpolate: /<%=([\s\S]+?)%>/g, 
+		escape: /<%-([\s\S]+?)%>/g
+	},
 
-  editors: {}
+	editors: {}
 
 });

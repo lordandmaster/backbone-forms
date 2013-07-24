@@ -44,15 +44,6 @@ Form.editors.Text = Form.Editor.extend({
     this.$el.attr('type', type);
   },
 
-  /**
-   * Adds the editor to the DOM
-   */
-  render: function() {
-    this.setValue(this.value);
-
-    return this;
-  },
-
   determineChange: function(event) {
     var currentValue = this.$el.val();
     var changed = (currentValue !== this.previousValue);

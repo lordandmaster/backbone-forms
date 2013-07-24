@@ -109,7 +109,7 @@ Form.editors.Date = Form.editors.Base.extend({
     $el.append(this.$hidden);
 
     //Set value on this and hidden field
-    this.setValue(this.value);
+    // this.setValue(this.value);
 
     //Remove the wrapper tag
     this.setElement($el);
@@ -118,6 +118,7 @@ Form.editors.Date = Form.editors.Base.extend({
 
     if (this.hasFocus) this.trigger('blur', this);
 
+	Form.editors.Base.prototype.render.call( this );
     return this;
   },
 
@@ -138,6 +139,9 @@ Form.editors.Date = Form.editors.Base.extend({
    * @param {Date} date
    */
   setValue: function(date) {
+	if ( !(date instanceof Date) ) {
+		return;
+	}
     this.$date.val(date.getDate());
     this.$month.val(date.getMonth());
     this.$year.val(date.getFullYear());

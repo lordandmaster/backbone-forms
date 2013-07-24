@@ -285,7 +285,6 @@ var Form = Backbone.View.extend({
 	var submit = this._submitHandler;
 	if ( typeof submit == 'function' ) {
 		$form.submit(function(e) {
-			self.commit();
 			return submit.call(self, e);
 		});
 	}
@@ -514,6 +513,10 @@ var Form = Backbone.View.extend({
 		method = method || 'html';
 		$(parent)[method]( this.render().el );
 		this.initChosens();
+		
+		_.each(this.fields, function (field, key) {
+			field.setValue( field.value );
+		});
 	},
 	
 	/**
@@ -1860,7 +1863,7 @@ Form.editors.Text = Form.Editor.extend({
    * Adds the editor to the DOM
    */
   render: function() {
-    this.setValue(this.value);
+    // this.setValue(this.value);
 
     return this;
   },
@@ -2060,7 +2063,7 @@ Form.editors.Checkbox = Form.editors.Base.extend({
    * Adds the editor to the DOM
    */
   render: function() {
-    this.setValue(this.value);
+    // this.setValue(this.value);
 
     return this;
   },
@@ -2530,6 +2533,7 @@ Form.editors.Range = Form.editors.Base.extend({
 	render: function() {
 		var html = '<input type="text"/><span> to </span><input type="text"/>';
 		this.$el.html( html );
+		
 		return this;
 	},
 	
@@ -2841,7 +2845,7 @@ Form.editors.Date = Form.editors.Base.extend({
     $el.append(this.$hidden);
 
     //Set value on this and hidden field
-    this.setValue(this.value);
+    // this.setValue(this.value);
 
     //Remove the wrapper tag
     this.setElement($el);
@@ -3003,7 +3007,7 @@ Form.editors.DateTime = Form.editors.Base.extend({
     this.$hidden = $el.find('input[type="hidden"]');
 
     //Set time
-    this.setValue(this.value);
+    // this.setValue(this.value);
 
     this.setElement($el);
     this.$el.attr('id', this.id);

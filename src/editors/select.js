@@ -32,6 +32,7 @@ Form.editors.Select = Form.editors.Base.extend({
   render: function() {
     this.setOptions(this.schema.options);
 
+	Form.editors.Base.prototype.render.call( this );
     return this;
   },
 

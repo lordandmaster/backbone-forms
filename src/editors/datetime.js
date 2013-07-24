@@ -82,7 +82,7 @@ Form.editors.DateTime = Form.editors.Base.extend({
     this.$hidden = $el.find('input[type="hidden"]');
 
     //Set time
-    this.setValue(this.value);
+    // this.setValue(this.value);
 
     this.setElement($el);
     this.$el.attr('id', this.id);
@@ -90,6 +90,7 @@ Form.editors.DateTime = Form.editors.Base.extend({
 
     if (this.hasFocus) this.trigger('blur', this);
 
+	Form.editors.Base.prototype.render.call( this );
     return this;
   },
 
