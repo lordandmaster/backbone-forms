@@ -1470,6 +1470,7 @@ Form.Field = Backbone.View.extend({
 		this.$el.remove();
 		this.setElement($field);
 		
+		// Toggle dependant fields
 		var self = this;
 		var onchange = function() {
 			var value = this.getValue();
@@ -2549,6 +2550,8 @@ Form.editors.Checkboxes = Form.editors.Select.extend({
 
 Form.editors.Range = Form.editors.Base.extend({
 
+	className: 'range',
+
 	initialize: function (options) {
 		this.value = [];
 		
@@ -2605,6 +2608,7 @@ Form.editors.Range = Form.editors.Base.extend({
 	}
 
 });
+
 /**
  * Object editor
  *
@@ -2873,7 +2877,9 @@ Form.editors.Date = Form.editors.Base.extend({
     $el.append(this.$hidden);
 
     //Set value on this and hidden field
-    // this.setValue(this.value);
+	if ( this.has_rendered ) {
+		this.setValue(this.getValue());
+	}
 
     //Remove the wrapper tag
     this.setElement($el);
@@ -2892,11 +2898,13 @@ Form.editors.Date = Form.editors.Base.extend({
   getValue: function() {
     var year = this.$year.val(),
         month = this.$month.val(),
-        date = this.$date.val();
+        day = this.$date.val();
 
-    if (!year || !month || !date) return null;
+    if (!year || !month || !day) return null;
+	
+	var date = new Date(year, month, day);
 
-    return new Date(year, month, date);
+    return date.getTime() / 1000;
   },
 
   /**
@@ -2904,13 +2912,14 @@ Form.editors.Date = Form.editors.Base.extend({
    */
   setValue: function(date) {
 	if ( !(date instanceof Date) ) {
-		return;
+		date = new Date(date * 1000);
 	}
     this.$date.val(date.getDate());
     this.$month.val(date.getMonth());
     this.$year.val(date.getFullYear());
 
     this.updateHidden();
+	return date;
   },
 
   focus: function() {
@@ -2932,7 +2941,9 @@ Form.editors.Date = Form.editors.Base.extend({
   updateHidden: function() {
     var val = this.getValue();
 
-    if (_.isDate(val)) val = val.toISOString();
+    if (_.isDate(val)) {
+		val = val.getTime() / 1000;
+	}
 
     this.$hidden.val(val);
   }
@@ -3039,7 +3050,9 @@ Form.editors.DateTime = Form.editors.Base.extend({
     this.$hidden = $el.find('input[type="hidden"]');
 
     //Set time
-    // this.setValue(this.value);
+	if ( this.has_rendered ) {
+		this.setValue(this.getValue());
+	}
 
     this.setElement($el);
     this.$el.attr('id', this.id);
@@ -3060,10 +3073,10 @@ Form.editors.DateTime = Form.editors.Base.extend({
     var hour = this.$hour.val(),
         min = this.$min.val();
 
-    if (!date || !hour || !min) return null;
-
-    date.setHours(hour);
-    date.setMinutes(min);
+    if (!date) return null;
+	
+	date += hour * 3600;
+	date += min * 60;
 
     return date;
   },
@@ -3072,9 +3085,7 @@ Form.editors.DateTime = Form.editors.Base.extend({
    * @param {Date}
    */
   setValue: function(date) {
-    if (!_.isDate(date)) date = new Date(date);
-
-    this.dateEditor.setValue(date);
+    date = this.dateEditor.setValue(date);
 
     this.$hour.val(date.getHours());
     this.$min.val(date.getMinutes());

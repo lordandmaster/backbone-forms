@@ -82,7 +82,9 @@ Form.editors.DateTime = Form.editors.Base.extend({
     this.$hidden = $el.find('input[type="hidden"]');
 
     //Set time
-    // this.setValue(this.value);
+	if ( this.has_rendered ) {
+		this.setValue(this.getValue());
+	}
 
     this.setElement($el);
     this.$el.attr('id', this.id);
@@ -103,10 +105,10 @@ Form.editors.DateTime = Form.editors.Base.extend({
     var hour = this.$hour.val(),
         min = this.$min.val();
 
-    if (!date || !hour || !min) return null;
-
-    date.setHours(hour);
-    date.setMinutes(min);
+    if (!date) return null;
+	
+	date += hour * 3600;
+	date += min * 60;
 
     return date;
   },
@@ -115,9 +117,7 @@ Form.editors.DateTime = Form.editors.Base.extend({
    * @param {Date}
    */
   setValue: function(date) {
-    if (!_.isDate(date)) date = new Date(date);
-
-    this.dateEditor.setValue(date);
+    date = this.dateEditor.setValue(date);
 
     this.$hour.val(date.getHours());
     this.$min.val(date.getMinutes());

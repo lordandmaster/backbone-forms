@@ -178,6 +178,7 @@ Form.Field = Backbone.View.extend({
 		this.$el.remove();
 		this.setElement($field);
 		
+		// Toggle dependant fields
 		var self = this;
 		var onchange = function() {
 			var value = this.getValue();

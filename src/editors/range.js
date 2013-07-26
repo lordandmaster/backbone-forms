@@ -1,6 +1,8 @@
 
 Form.editors.Range = Form.editors.Base.extend({
 
+	className: 'range',
+
 	initialize: function (options) {
 		this.value = [];
 		

@@ -98,8 +98,7 @@
 
     var value = editor.getValue();
 
-    same(value.constructor.name, 'Date');
-    same(value.getTime(), date.getTime());
+    same(value, date.getTime()/1000);
   });
 
   test('setValue()', function() {
@@ -114,7 +113,7 @@
     //Should set value on date editor
     same(spy.lastCall.args[0], date);
 
-    same(editor.getValue().getTime(), date.getTime());
+    same(editor.getValue(), date.getTime()/1000);
   });
 
   test('updates the hidden input when a value changes', function() {
@@ -128,9 +127,9 @@
     editor.$hour.val(5).trigger('change');
     editor.$min.val(15).trigger('change');
 
-    var hiddenVal = new Date(editor.$hidden.val());
+    var hiddenVal = new Date(editor.$hidden.val()*1000);
 
-    same(editor.getValue().getTime(), hiddenVal.getTime());
+    same(editor.getValue(), hiddenVal.getTime()/1000);
     same(hiddenVal.getHours(), 5);
     same(hiddenVal.getMinutes(), 15);
   });

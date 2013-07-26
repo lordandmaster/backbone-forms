@@ -108,9 +108,8 @@
         editor = new Editor({ value: date }).render();
 
     var value = editor.getValue();
-
-    same(value.constructor.name, 'Date');
-    same(value.getTime(), date.getTime());
+	
+	same(value, date.getTime() / 1000);
   });
 
   test('setValue()', function() {
@@ -129,7 +128,7 @@
     same(editor.$month.val(), '1');
     same(editor.$year.val(), '2015');
 
-    same(editor.getValue().getTime(), date.getTime());
+    same(editor.getValue(), date.getTime()/1000);
   });
 
   test('updates the hidden input when a value changes', function() {
@@ -148,9 +147,9 @@
     editor.$month.val(6).trigger('change');
     editor.$date.val(13).trigger('change');
 
-    var hiddenVal = new Date(editor.$hidden.val());
+    var hiddenVal = new Date(editor.$hidden.val()*1000);
 
-    same(editor.getValue().getTime(), hiddenVal.getTime());
+    same(editor.getValue(), hiddenVal.getTime() / 1000);
     same(hiddenVal.getFullYear(), 2020);
     same(hiddenVal.getMonth(), 6);
     same(hiddenVal.getDate(), 13);
