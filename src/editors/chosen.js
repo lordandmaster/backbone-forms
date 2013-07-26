@@ -37,12 +37,17 @@ Form.editors.Chosen = Form.editors.Select.extend({
 	},
 	
 	render: function() {
-		Form.editors.Chosen.__super__.render.call(this);
+		Form.editors.Select.prototype.render.call(this);
 		
 		// TODO: Should not use schemaAttrs for this check
 		var attrs = this.schema.schemaAttrs;
 		if ( attrs && attrs.datatype == 'multi_select' ) {
 			this.el.multiple = 'multiple';
+		}
+		
+		if ( this.$el.parent().length > 0 ) {
+			this.$el.removeClass('chzn-done');
+			this.initDisplay();
 		}
 		
 		return this;
@@ -57,7 +62,7 @@ Form.editors.Chosen = Form.editors.Select.extend({
 	remove: function() {
 		// Kill the chosen stuff
 		this.$el.next().remove();
-		Form.editors.Chosen.__super__.remove.call(this);
+		Form.editors.Select.prototype.remove.call(this);
 	}
 	
 });

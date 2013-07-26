@@ -68,6 +68,7 @@ var SceForm = Form.extend({
 			this._submitView = $field;
 		}
 		
+		this.current_errors = {};
 		this.constructor.__super__.initialize.call(this, form_options);
 		
 	},
@@ -95,6 +96,15 @@ var SceForm = Form.extend({
 	 * @param Hash of field_name => [error_messages] pairs.
 	 */
 	setErrors: function (errors) {
+		if ( errors instanceof Array ) {
+			errors = {};
+		}
+		
+		_.each(this.current_errors, function (error, key) {
+			if ( !errors[key] )
+				errors[key] = null;
+		});
+		
 		_.each(errors, function (error, key) {
 			if ( !this.fields[key] ) {
 				throw new Error("Unknown field '" + key + "'");
@@ -103,6 +113,8 @@ var SceForm = Form.extend({
 			var text = (error instanceof Array) ? error.join('<br/>') : error;
 			this.fields[key].setSchemaAttr( 'errortext', text );
 		}, this);
+		
+		this.current_errors = errors;
 	},
 	
 	/**

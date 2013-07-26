@@ -34,17 +34,6 @@ Form.Field = Backbone.View.extend({
 
 		//Create editor
 		this.editor = this.createEditor();
-		var self = this;
-		this.editor.on('change', function() {
-			var value = this.getValue();
-			_.each(self.dependants, function (fieldset) {
-				if ( value ) {
-					fieldset.$el.addClass('active');
-				} else {
-					fieldset.$el.removeClass('active');
-				}
-			});
-		});
 	},
 
 	/**
@@ -188,6 +177,20 @@ Form.Field = Backbone.View.extend({
 		
 		this.$el.remove();
 		this.setElement($field);
+		
+		var self = this;
+		var onchange = function() {
+			var value = this.getValue();
+			_.each(self.dependants, function (fieldset) {
+				if ( value ) {
+					fieldset.$el.addClass('active');
+				} else {
+					fieldset.$el.removeClass('active');
+				}
+			});
+		};
+		this.editor.on('change', onchange);
+		onchange.call(this.editor);
 
 		return this;
 	},

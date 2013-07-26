@@ -862,6 +862,36 @@ test('Dynamically displays errors', function() {
 	same(cleanse(func.args[2][1]), 'bye<br/>bye');
 });
 
+test('Render errors', function() {
+	var tpl = function(data) { return '<span>' + data.schemaAttrs.errortext + '</span>'; };
+	
+	var form = new SceForm({
+		schema: {
+			title: { type: 'Text', template: tpl },
+			name: { type: 'Text', template: tpl }
+		}
+	});
+	
+	form.render();
+	form.setErrors({ title: 'error' });
+	
+	var getFieldHtml = function (field) {
+		return cleanse(form.fields[field].$el.html());
+	};
+	
+	same( getFieldHtml('title'), 'error' );
+	
+	form.setErrors({ title: 'errt', name: 'errn' });
+	
+	same( getFieldHtml('title'), 'errt' );
+	same( getFieldHtml('name'), 'errn' );
+	
+	form.setErrors({ name: 'e3' });
+	
+	same( getFieldHtml('title'), 'null' );
+	same( getFieldHtml('name'), 'e3' );
+});
+
 test('Wrong attribute throws error', function() {
 	var caught = false;
 	var form = new SceForm();
