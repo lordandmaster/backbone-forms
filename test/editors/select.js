@@ -407,6 +407,22 @@
     equal($(editor.el).val(), 'Lana');
   });
 
+	test('Re-render preserves value', function() {
+		var editor = new Editor({
+			value: 'Lana',
+			schema: schema
+		}).render();
+		
+		editor.render().render();
+		
+		same(editor.getValue(), 'Lana');
+		
+		editor.setValue('Pam');
+		editor.render();
+		
+		same(editor.getValue(), 'Pam');
+	});
+
 
 
   module('Select events', {

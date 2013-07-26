@@ -29,13 +29,17 @@ Form.editors.Radio = Form.editors.Select.extend({
     }
   },
 
-  getValue: function() {
-    return this.$('input[type=radio]:checked').val();
-  },
+	getValue: function() {
+		return this.$('input[type=radio]:checked').val();
+	},
 
-  setValue: function(value) {
-    this.$('input[type=radio]').val([value]);
-  },
+	setValue: function(value) {
+		if ( !(value instanceof Array) ) {
+			value = [value];
+		}
+		this.$('input[type=radio]').val(value);
+		this.value = value;
+	},
 
   focus: function() {
     if (this.hasFocus) return;

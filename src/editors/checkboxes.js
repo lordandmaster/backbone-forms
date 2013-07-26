@@ -41,6 +41,7 @@ Form.editors.Checkboxes = Form.editors.Select.extend({
   setValue: function(values) {
     if (!_.isArray(values)) values = [values];
     this.$('input[type=checkbox]').val(values);
+	this.value = values;
   },
 
   focus: function() {

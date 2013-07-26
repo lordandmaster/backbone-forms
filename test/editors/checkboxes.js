@@ -108,6 +108,22 @@
     equal($(editor.el).find('input[type=checkbox]:checked').length, 2);
   });
 
+	test('Re-render preserves value', function() {
+		var editor = new Editor({
+			value: [ 'Lana', 'Pam' ],
+			schema: schema
+		}).render();
+		
+		editor.render().render();
+		
+		same(editor.getValue(), [ 'Lana', 'Pam' ]);
+		
+		editor.setValue(['Cheryl']);
+		editor.render();
+		
+		same(editor.getValue(), ['Cheryl']);
+	});
+
 
 
   module('Checkboxes events', {

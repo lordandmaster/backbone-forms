@@ -2127,6 +2127,7 @@ Form.editors.Select = Form.editors.Base.extend({
 
   events: {
     'change': function(event) {
+		this.value = this.getValue();
       this.trigger('change', this);
     },
     'focus':  function(event) {
@@ -2147,6 +2148,11 @@ Form.editors.Select = Form.editors.Base.extend({
     this.setOptions(this.schema.options);
 
 	Form.editors.Base.prototype.render.call( this );
+	
+	if ( this.has_rendered ) {
+		this.setValue( this.value );
+	}
+	
     return this;
   },
 
@@ -2201,9 +2207,6 @@ Form.editors.Select = Form.editors.Base.extend({
 
     //Insert options
     $select.html(html);
-
-    //Select correct option
-    this.setValue(this.value);
   },
 
   _getOptionsHtml: function(options) {
@@ -2242,6 +2245,7 @@ Form.editors.Select = Form.editors.Base.extend({
 
   setValue: function(value) {
     this.$el.val(value);
+	this.value = value;
   },
 
   focus: function() {
@@ -2404,13 +2408,17 @@ Form.editors.Radio = Form.editors.Select.extend({
     }
   },
 
-  getValue: function() {
-    return this.$('input[type=radio]:checked').val();
-  },
+	getValue: function() {
+		return this.$('input[type=radio]:checked').val();
+	},
 
-  setValue: function(value) {
-    this.$('input[type=radio]').val([value]);
-  },
+	setValue: function(value) {
+		if ( !(value instanceof Array) ) {
+			value = [value];
+		}
+		this.$('input[type=radio]').val(value);
+		this.value = value;
+	},
 
   focus: function() {
     if (this.hasFocus) return;
@@ -2503,6 +2511,7 @@ Form.editors.Checkboxes = Form.editors.Select.extend({
   setValue: function(values) {
     if (!_.isArray(values)) values = [values];
     this.$('input[type=checkbox]').val(values);
+	this.value = values;
   },
 
   focus: function() {
@@ -2551,18 +2560,32 @@ Form.editors.Checkboxes = Form.editors.Select.extend({
 Form.editors.Range = Form.editors.Base.extend({
 
 	className: 'range',
-
-	initialize: function (options) {
-		this.value = [];
-		
-		Form.editors.Base.prototype.initialize.call( this, options );
+	
+	events: {
+		'change input': function (event) {
+			this.value = this.getValue();
+		},
+		'focus input': function (event) {
+			this.trigger('focus', this);
+		},
+		'blur input':  function (event) {
+			this.trigger('blur', this);
+		},
+		'select input': function (event) {
+			this.trigger('select', this);
+		}
 	},
 	
 	render: function() {
 		var html = '<input type="text"/><span> to </span><input type="text"/>';
 		this.$el.html( html );
 		
+		if ( this.has_rendered ) {
+			this.setValue( this.value );
+		}
+		
 		Form.editors.Base.prototype.render.call( this );
+		
 		return this;
 	},
 	
@@ -2574,7 +2597,10 @@ Form.editors.Range = Form.editors.Base.extend({
 	getValue: function() {
 		var inputs = this.$el.children('input');
 		
-		return [ inputs[0].value, inputs[1].value ];
+		return _.map(inputs.toArray(), function(input) {
+			var value = parseFloat(input.value);
+			return isNaN(value) ? null : value;
+		});
 	},
 	
 	/**
@@ -2589,22 +2615,23 @@ Form.editors.Range = Form.editors.Base.extend({
 		
 		inputs[0].value = value[0];
 		inputs[1].value = value[1];
+		this.value = this.getValue();
 	},
 	
 	focus: function() {
 		if ( this.hasFocus) return;
 		
-		this.$el.children(':first-child').focus();
+		this.$('input:first').focus();
 	},
 	
 	blur: function() {
 		if ( !this.hasFocus) return;
 		
-		this.$el.children(':first-child').blur();
+		this.$('input:first').blur();
 	},
 	
 	select: function() {
-		this.$el.children(':first-child').select();
+		this.$('input:first').select();
 	}
 
 });
@@ -2878,7 +2905,7 @@ Form.editors.Date = Form.editors.Base.extend({
 
     //Set value on this and hidden field
 	if ( this.has_rendered ) {
-		this.setValue(this.getValue());
+		this.setValue( this.value );
 	}
 
     //Remove the wrapper tag
@@ -2940,11 +2967,7 @@ Form.editors.Date = Form.editors.Base.extend({
    */
   updateHidden: function() {
     var val = this.getValue();
-
-    if (_.isDate(val)) {
-		val = val.getTime() / 1000;
-	}
-
+	this.value = new Date(val * 1000);
     this.$hidden.val(val);
   }
 
@@ -3005,13 +3028,24 @@ Form.editors.DateTime = Form.editors.Base.extend({
 
     //Schema defaults
     this.schema = _.extend({
-      minsInterval: 15
+      minsInterval: 1
     }, options.schema || {});
 
     //Create embedded date editor
     this.dateEditor = new this.options.DateEditor(options);
+	
+	if ( this.value && !_.isDate(this.value) ) {
+		this.value = new Date(this.value);
+	}
 
-    this.value = this.dateEditor.value;
+    //Set default date
+    if (!this.value) {
+      var date = new Date();
+      date.setSeconds(0);
+      date.setMilliseconds(0);
+
+      this.value = date;
+    }
 
     //Template
     this.template = options.template || this.constructor.template;
@@ -3051,7 +3085,7 @@ Form.editors.DateTime = Form.editors.Base.extend({
 
     //Set time
 	if ( this.has_rendered ) {
-		this.setValue(this.getValue());
+		this.setValue( this.value );
 	}
 
     this.setElement($el);
@@ -3089,7 +3123,7 @@ Form.editors.DateTime = Form.editors.Base.extend({
 
     this.$hour.val(date.getHours());
     this.$min.val(date.getMinutes());
-
+	
     this.updateHidden();
   },
 
@@ -3111,9 +3145,8 @@ Form.editors.DateTime = Form.editors.Base.extend({
    */
   updateHidden: function() {
     var val = this.getValue();
-    if (_.isDate(val)) val = val.toISOString();
-
-    this.$hidden.val(val);
+	this.value = new Date(val * 1000);
+	this.$hidden.val(val);
   },
 
   /**

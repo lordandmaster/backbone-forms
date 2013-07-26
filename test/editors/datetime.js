@@ -37,7 +37,7 @@
     same(editor.options.DateEditor, Editor.DateEditor);
 
     //Schema options
-    same(schema.minsInterval, 15);
+    same(schema.minsInterval, 1);
   });
 
   test('initialize() - creates a Date instance', function() {
@@ -72,11 +72,11 @@
     same(editor.$hour.find('option:last').html(), '23');
 
     same(editor.$min.attr('data-type'), 'min');
-    same(editor.$min.find('option').length, 4);
+    same(editor.$min.find('option').length, 60);
     same(editor.$min.find('option:first').val(), '0');
-    same(editor.$min.find('option:last').val(), '45');
+    same(editor.$min.find('option:last').val(), '59');
     same(editor.$min.find('option:first').html(), '00');
-    same(editor.$min.find('option:last').html(), '45');
+    same(editor.$min.find('option:last').html(), '59');
   });
 
   test('render() - creates hours and mins - with custom minsInterval', function() {
@@ -145,6 +145,24 @@
     ok(DateEditor.prototype.remove.calledOnce);
     ok(Form.editors.Base.prototype.remove.calledOnce);
   });
+
+	test('Re-render preserves value', function() {
+		var date = new Date(2012, 7, 25, 8, 7);
+		
+		var editor = new Editor({
+			value: date
+		}).render();
+		
+		// editor.render().render();
+		
+		same(editor.getValue(), date.getTime()/1000);
+		
+		var date = new Date(2005, 5, 5);
+		editor.setValue(date);
+		editor.render();
+		
+		same(editor.getValue(), date.getTime()/1000);
+	});
 
 
 

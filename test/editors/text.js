@@ -63,6 +63,21 @@
     equal($(editor.el).val(), 'foobar');
   });
 
+	test('Re-render preserves value', function() {
+		var editor = new Editor({
+			value: 'Lana'
+		}).render();
+		
+		editor.render().render();
+		
+		same(editor.getValue(), 'Lana');
+		
+		editor.setValue('Pam');
+		editor.render();
+		
+		same(editor.getValue(), 'Pam');
+	});
+
 
 
   module('Text#focus', {

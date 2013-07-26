@@ -1,42 +1,24 @@
 ;(function(Form, Editor) {
 
-  module('Text');
+  module('Range');
 
   var same = deepEqual;
 
 
-  module('Text#initialize');
-
-  test('Default type is text', function() {
-    var editor = new Editor().render();
-
-    equal($(editor.el).attr('type'), 'text');
-  });
-
-  test('Type can be changed', function() {
-    var editor = new Editor({
-      schema: { dataType: 'tel' }
-    }).render();
-
-    equal($(editor.el).attr('type'), 'tel');
-  });
-
-
-
-  module('Text#getValue()');
+  module('Range#getValue()');
 
   test('Default value', function() {
     var editor = new Editor().render();
 
-    equal(editor.getValue(), '');
+    same(editor.getValue(), [null,null]);
   });
 
   test('Custom value', function() {
     var editor = new Editor({
-      value: 'Test'
+      value: ['Test', 3.2]
     }).render();
 
-    equal(editor.getValue(), 'Test');
+    same(editor.getValue(), [null,3.2]);
   });
 
   /*test('Value from model', function() {
@@ -50,21 +32,36 @@
 
 
 
-  module('Text#setValue');
+  module('Range#setValue');
 
   test('updates the input value', function() {
     var editor = new Editor({
       key: 'title'
     }).render();
 
-    editor.setValue(['foo', 'bar']);
+    editor.setValue([8.2, 8.3]);
 
-    equal(editor.getValue(), ['foo', 'bar']);
+    same(editor.getValue(), [8.2, 8.3]);
   });
 
+	test('Re-render preserves value', function() {
+		var editor = new Editor({
+			value: [ 4, 10 ]
+		}).render();
+		
+		editor.render().render();
+		
+		same(editor.getValue(), [4, 10]);
+		
+		editor.setValue([3,2]);
+		editor.render();
+		
+		same(editor.getValue(), [3,2]);
+	});
 
 
-  module('Text#focus', {
+
+  module('Range#focus', {
     setup: function() {
       this.sinon = sinon.sandbox.create();
 
@@ -87,7 +84,7 @@
     this.editor.focus();
 
     ok(this.editor.hasFocus);
-    ok(this.editor.$el.is(':focus'));
+    ok(this.editor.$('input:first').is(':focus'));
   });
 
   test('triggers the "focus" event', function() {
@@ -104,7 +101,7 @@
 
 
 
-  module('Text#blur', {
+  module('Range#blur', {
     setup: function() {
       this.sinon = sinon.sandbox.create();
 
@@ -128,7 +125,7 @@
     editor.blur();
 
     ok(!editor.hasFocus);
-    ok(!editor.$el.is(':focus'));
+    ok(!editor.$('input:first').is(':focus'));
   });
 
   test('triggers the "blur" event', function() {
@@ -146,26 +143,10 @@
     ok(spy.calledWith(editor));
   });
 
-
-
-  module('Text#select', {
-    setup: function() {
-      this.sinon = sinon.sandbox.create();
-
-      this.editor = new Editor().render();
-
-      $('body').append(this.editor.el);
-    },
-
-    teardown: function() {
-      this.sinon.restore();
-
-      this.editor.remove();
-    }
-  });
-
   test('triggers the "select" event', function() {
     var editor = this.editor;
+
+    editor.focus()
 
     var spy = this.sinon.spy();
 
@@ -179,7 +160,7 @@
 
 
 
-  module('Text events', {
+  module('range events', {
     setup: function() {
       this.sinon = sinon.sandbox.create();
 
@@ -205,44 +186,44 @@
     editor.on('change', spy);
 
     // Pressing a key
-    editor.$el.keypress();
-    editor.$el.val('a');
+    editor.$('input:first').keypress();
+    editor.$('input:first').val('a');
 
     stop();
     setTimeout(function(){
       callCount++;
 
-      editor.$el.keyup();
+      editor.$('input:first').keyup();
 
       // Keeping a key pressed for a longer time
-      editor.$el.keypress();
-      editor.$el.val('ab');
+      editor.$('input:first').keypress();
+      editor.$('input:first').val('ab');
 
       setTimeout(function(){
         callCount++;
 
-        editor.$el.keypress();
-        editor.$el.val('abb');
+        editor.$('input:first').keypress();
+        editor.$('input:first').val('abb');
 
         setTimeout(function(){
           callCount++;
 
-          editor.$el.keyup();
+          editor.$('input:first').keyup();
 
           // Cmd+A; Backspace: Deleting everything
-          editor.$el.keyup();
-          editor.$el.val('');
-          editor.$el.keyup();
+          editor.$('input:first').keyup();
+          editor.$('input:first').val('');
+          editor.$('input:first').keyup();
           callCount++;
 
           // Cmd+V: Pasting something
-          editor.$el.val('abdef');
-          editor.$el.keyup();
+          editor.$('input:first').val('abdef');
+          editor.$('input:first').keyup();
           callCount++;
 
           // Left; Right: Pointlessly moving around
-          editor.$el.keyup();
-          editor.$el.keyup();
+          editor.$('input:first').keyup();
+          editor.$('input:first').keyup();
 
           ok(spy.callCount == callCount);
           ok(spy.alwaysCalledWith(editor));
@@ -260,7 +241,7 @@
 
     editor.on('focus', spy);
 
-    editor.$el.focus();
+    editor.$('input:first').focus();
 
     ok(spy.calledOnce);
     ok(spy.alwaysCalledWith(editor));
@@ -269,13 +250,13 @@
   test("'blur' event - bubbles up from the input", function() {
     var editor = this.editor;
 
-    editor.$el.focus();
+    editor.$('input:first').focus();
 
     var spy = this.sinon.spy();
 
     editor.on('blur', spy);
 
-    editor.$el.blur();
+    editor.$('input:first').blur();
 
     ok(spy.calledOnce);
     ok(spy.alwaysCalledWith(editor));
@@ -288,11 +269,11 @@
 
     editor.on('select', spy);
 
-    editor.$el.select();
+    editor.$('input:first').select();
 
     ok(spy.calledOnce);
     ok(spy.alwaysCalledWith(editor));
   });
 
 
-})(Backbone.Form, Backbone.Form.editors.Text);
+})(Backbone.Form, Backbone.Form.editors.Range);

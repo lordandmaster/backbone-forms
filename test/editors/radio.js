@@ -90,6 +90,22 @@
     notEqual($(editor.el).find('input[type=radio]').length, 0);
   });
 
+	test('Re-render preserves value', function() {
+		var editor = new Editor({
+			value: 'Lana',
+			schema: schema
+		}).render();
+		
+		editor.render().render();
+		
+		same(editor.getValue(), 'Lana');
+		
+		editor.setValue('Pam');
+		// editor.render();
+		
+		same(editor.getValue(), 'Pam');
+	});
+
 
 
   module('Radio events', {

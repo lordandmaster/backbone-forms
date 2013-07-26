@@ -110,7 +110,7 @@ Form.editors.Date = Form.editors.Base.extend({
 
     //Set value on this and hidden field
 	if ( this.has_rendered ) {
-		this.setValue(this.getValue());
+		this.setValue( this.value );
 	}
 
     //Remove the wrapper tag
@@ -172,11 +172,7 @@ Form.editors.Date = Form.editors.Base.extend({
    */
   updateHidden: function() {
     var val = this.getValue();
-
-    if (_.isDate(val)) {
-		val = val.getTime() / 1000;
-	}
-
+	this.value = new Date(val * 1000);
     this.$hidden.val(val);
   }
 

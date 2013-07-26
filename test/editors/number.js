@@ -82,6 +82,21 @@
     same(editor.getValue(), null);
   });
 
+	test('Re-render preserves value', function() {
+		var editor = new Editor({
+			value: '123'
+		}).render();
+		
+		editor.render().render();
+		
+		same(editor.getValue(), 123);
+		
+		editor.setValue(321);
+		editor.render();
+		
+		same(editor.getValue(), 321);
+	});
+
 
 
   module('Number events', {

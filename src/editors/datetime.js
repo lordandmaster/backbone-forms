@@ -37,13 +37,24 @@ Form.editors.DateTime = Form.editors.Base.extend({
 
     //Schema defaults
     this.schema = _.extend({
-      minsInterval: 15
+      minsInterval: 1
     }, options.schema || {});
 
     //Create embedded date editor
     this.dateEditor = new this.options.DateEditor(options);
+	
+	if ( this.value && !_.isDate(this.value) ) {
+		this.value = new Date(this.value);
+	}
 
-    this.value = this.dateEditor.value;
+    //Set default date
+    if (!this.value) {
+      var date = new Date();
+      date.setSeconds(0);
+      date.setMilliseconds(0);
+
+      this.value = date;
+    }
 
     //Template
     this.template = options.template || this.constructor.template;
@@ -83,7 +94,7 @@ Form.editors.DateTime = Form.editors.Base.extend({
 
     //Set time
 	if ( this.has_rendered ) {
-		this.setValue(this.getValue());
+		this.setValue( this.value );
 	}
 
     this.setElement($el);
@@ -121,7 +132,7 @@ Form.editors.DateTime = Form.editors.Base.extend({
 
     this.$hour.val(date.getHours());
     this.$min.val(date.getMinutes());
-
+	
     this.updateHidden();
   },
 
@@ -143,9 +154,8 @@ Form.editors.DateTime = Form.editors.Base.extend({
    */
   updateHidden: function() {
     var val = this.getValue();
-    if (_.isDate(val)) val = val.toISOString();
-
-    this.$hidden.val(val);
+	this.value = new Date(val * 1000);
+	this.$hidden.val(val);
   },
 
   /**

@@ -155,6 +155,24 @@
     same(hiddenVal.getDate(), 13);
   });
 
+	test('Re-render preserves value', function() {
+		var date = new Date(2012, 7, 26);
+		
+		var editor = new Editor({
+			value: date
+		}).render();
+		
+		editor.render().render();
+		
+		same(editor.getValue(), date.getTime()/1000);
+		
+		var date = new Date(2005, 5, 5);
+		editor.setValue(date);
+		editor.render();
+		
+		same(editor.getValue(), date.getTime()/1000);
+	});
+
 
 
   module('Date events', {

@@ -74,6 +74,21 @@
     deepEqual($(editor.el).prop('checked'), true);
   });
 
+	test('Re-render preserves value', function() {
+		var editor = new Editor({
+			value: false
+		}).render();
+		
+		editor.render().render();
+		
+		same(editor.getValue(), false);
+		
+		editor.setValue(true);
+		editor.render();
+		
+		same(editor.getValue(), true);
+	});
+
 
 
   module('Checkbox events', {

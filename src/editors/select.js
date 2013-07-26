@@ -13,6 +13,7 @@ Form.editors.Select = Form.editors.Base.extend({
 
   events: {
     'change': function(event) {
+		this.value = this.getValue();
       this.trigger('change', this);
     },
     'focus':  function(event) {
@@ -33,6 +34,11 @@ Form.editors.Select = Form.editors.Base.extend({
     this.setOptions(this.schema.options);
 
 	Form.editors.Base.prototype.render.call( this );
+	
+	if ( this.has_rendered ) {
+		this.setValue( this.value );
+	}
+	
     return this;
   },
 
@@ -87,9 +93,6 @@ Form.editors.Select = Form.editors.Base.extend({
 
     //Insert options
     $select.html(html);
-
-    //Select correct option
-    this.setValue(this.value);
   },
 
   _getOptionsHtml: function(options) {
@@ -128,6 +131,7 @@ Form.editors.Select = Form.editors.Base.extend({
 
   setValue: function(value) {
     this.$el.val(value);
+	this.value = value;
   },
 
   focus: function() {
