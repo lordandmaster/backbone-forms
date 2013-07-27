@@ -1508,6 +1508,10 @@ Form.Field = Backbone.View.extend({
 		} else {
 			this.render().$el.insertBefore( next );
 		}
+		
+		if ( this.typeName == 'Chosen' ) {
+			this.editor.initDisplay(true);
+		}
 	},
 
 	/**
@@ -2124,38 +2128,40 @@ Form.editors.Checkbox = Form.editors.Base.extend({
  */
 Form.editors.Select = Form.editors.Base.extend({
 
-  tagName: 'select',
+	tagName: 'select',
 
-  events: {
-    'change': function(event) {
-		this.value = this.getValue();
-      this.trigger('change', this);
-    },
-    'focus':  function(event) {
-      this.trigger('focus', this);
-    },
-    'blur':   function(event) {
-      this.trigger('blur', this);
-    }
-  },
+	events: {
+		'change': function(event) {
+			console.log('changed');
+			this.value = this.getValue();
+			this.trigger('change', this);
+		},
+		'focus':  function(event) {
+			this.trigger('focus', this);
+		},
+		'blur':   function(event) {
+			this.trigger('blur', this);
+		}
+	},
 
-  initialize: function(options) {
-    Form.editors.Base.prototype.initialize.call(this, options);
+	initialize: function(options) {
+		Form.editors.Base.prototype.initialize.call(this, options);
 
-    if (!this.schema || !this.schema.options) throw "Missing required 'schema.options'";
-  },
+		if (!this.schema || !this.schema.options) throw "Missing required 'schema.options'";
+	},
 
-  render: function() {
-    this.setOptions(this.schema.options);
+	render: function() {
+		this.setOptions(this.schema.options);
 
-	Form.editors.Base.prototype.render.call( this );
-	
-	if ( this.has_rendered ) {
-		this.setValue( this.value );
-	}
-	
-    return this;
-  },
+		Form.editors.Base.prototype.render.call( this );
+
+		if ( this.has_rendered ) {
+			this.setValue( this.value );
+		}
+
+		this.delegateEvents();
+		return this;
+	},
 
   /**
    * Sets the options that populate the <select>
@@ -2357,15 +2363,15 @@ Form.editors.Chosen = Form.editors.Select.extend({
 			this.el.multiple = 'multiple';
 		}
 		
-		if ( this.$el.parent().length > 0 ) {
-			this.$el.removeClass('chzn-done');
-			this.initDisplay();
-		}
-		
 		return this;
 	},
 	
-	initDisplay: function() {
+	initDisplay: function (force) {
+		if ( force ) {
+			this.$el.removeClass('chzn-done');
+			this.$el.show();
+		}
+		
 		this.$el.closest('.dependent').css('display', 'block');
 		this.$el.chosen( this.chosenOptions );
 		this.$el.closest('.dependent').css('display', '');
