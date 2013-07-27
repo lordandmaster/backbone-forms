@@ -45,15 +45,15 @@ Form.editors.Chosen = Form.editors.Select.extend({
 			this.el.multiple = 'multiple';
 		}
 		
-		if ( this.$el.parent().length > 0 ) {
-			this.$el.removeClass('chzn-done');
-			this.initDisplay();
-		}
-		
 		return this;
 	},
 	
-	initDisplay: function() {
+	initDisplay: function (force) {
+		if ( force ) {
+			this.$el.removeClass('chzn-done');
+			this.$el.show();
+		}
+		
 		this.$el.closest('.dependent').css('display', 'block');
 		this.$el.chosen( this.chosenOptions );
 		this.$el.closest('.dependent').css('display', '');

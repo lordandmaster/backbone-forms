@@ -9,38 +9,40 @@
  */
 Form.editors.Select = Form.editors.Base.extend({
 
-  tagName: 'select',
+	tagName: 'select',
 
-  events: {
-    'change': function(event) {
-		this.value = this.getValue();
-      this.trigger('change', this);
-    },
-    'focus':  function(event) {
-      this.trigger('focus', this);
-    },
-    'blur':   function(event) {
-      this.trigger('blur', this);
-    }
-  },
+	events: {
+		'change': function(event) {
+			console.log('changed');
+			this.value = this.getValue();
+			this.trigger('change', this);
+		},
+		'focus':  function(event) {
+			this.trigger('focus', this);
+		},
+		'blur':   function(event) {
+			this.trigger('blur', this);
+		}
+	},
 
-  initialize: function(options) {
-    Form.editors.Base.prototype.initialize.call(this, options);
+	initialize: function(options) {
+		Form.editors.Base.prototype.initialize.call(this, options);
 
-    if (!this.schema || !this.schema.options) throw "Missing required 'schema.options'";
-  },
+		if (!this.schema || !this.schema.options) throw "Missing required 'schema.options'";
+	},
 
-  render: function() {
-    this.setOptions(this.schema.options);
+	render: function() {
+		this.setOptions(this.schema.options);
 
-	Form.editors.Base.prototype.render.call( this );
-	
-	if ( this.has_rendered ) {
-		this.setValue( this.value );
-	}
-	
-    return this;
-  },
+		Form.editors.Base.prototype.render.call( this );
+
+		if ( this.has_rendered ) {
+			this.setValue( this.value );
+		}
+
+		this.delegateEvents();
+		return this;
+	},
 
   /**
    * Sets the options that populate the <select>

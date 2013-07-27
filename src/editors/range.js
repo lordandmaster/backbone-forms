@@ -4,6 +4,9 @@ Form.editors.Range = Form.editors.Base.extend({
 	className: 'range',
 	
 	events: {
+		'keyup input': function (event) {
+			this.value = this.getValue();
+		},
 		'change input': function (event) {
 			this.value = this.getValue();
 		},

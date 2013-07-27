@@ -660,11 +660,6 @@ var SceForm = Form.extend({
 			errors = {};
 		}
 		
-		_.each(this.current_errors, function (error, key) {
-			if ( !errors[key] )
-				errors[key] = null;
-		});
-		
 		_.each(errors, function (error, key) {
 			if ( !this.fields[key] ) {
 				throw new Error("Unknown field '" + key + "'");
@@ -672,6 +667,12 @@ var SceForm = Form.extend({
 			
 			var text = (error instanceof Array) ? error.join('<br/>') : error;
 			this.fields[key].setSchemaAttr( 'errortext', text );
+		}, this);
+		
+		_.each(this.current_errors, function (error, key) {
+			if ( !errors[key] ) {
+				this.fields[key].setSchemaAttr( 'errortext', null );
+			}
 		}, this);
 		
 		this.current_errors = errors;
@@ -2562,6 +2563,9 @@ Form.editors.Range = Form.editors.Base.extend({
 	className: 'range',
 	
 	events: {
+		'keyup input': function (event) {
+			this.value = this.getValue();
+		},
 		'change input': function (event) {
 			this.value = this.getValue();
 		},

@@ -215,6 +215,10 @@ Form.Field = Backbone.View.extend({
 		} else {
 			this.render().$el.insertBefore( next );
 		}
+		
+		if ( this.typeName == 'Chosen' ) {
+			this.editor.initDisplay(true);
+		}
 	},
 
 	/**
