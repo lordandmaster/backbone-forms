@@ -772,6 +772,14 @@ module('SceForm#remove', {
   }
 });
 
+var showError = function(err) {
+	var text = (err instanceof Array) ? err.join('<br/>') : err;
+	this.setSchemaAttr( 'errortext', text );
+};
+var hideError = function() {
+	this.setSchemaAttr( 'errortext', null );
+};
+
 test('removes fieldsets, fields and self', function() {  
   var form = new SceForm({
     schema: { title: 'Text', author: 'Text' },
@@ -844,7 +852,9 @@ test('Creates submit button', function() {
 test('Dynamically displays errors', function() {
 	var form = new SceForm({
 		fieldTemplate: function() { return '<span>' + data.schemaAttrs.errortext + '</span>'; },
-		schema: { title: {}, name: {} }
+		schema: { title: {}, name: {} },
+		showError: showError,
+		hideError: hideError
 	});
 	
 	form.render();
@@ -869,7 +879,9 @@ test('Render errors', function() {
 		schema: {
 			title: { type: 'Text', template: tpl },
 			name: { type: 'Text', template: tpl }
-		}
+		},
+		showError: showError,
+		hideError: hideError
 	});
 	
 	form.render();

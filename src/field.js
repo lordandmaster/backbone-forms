@@ -28,6 +28,8 @@ Form.Field = Backbone.View.extend({
 		var schema = this.schema = this.createSchema(options.schema);
 
 		//Override defaults
+		this.showError = options.showError || schema.showError || this.constructor.showError;
+		this.hideError = options.hideError || schema.hideError || this.constructor.hideError;
 		this.template = options.template || schema.template || this.constructor.template;
 		this.errorClassName = options.errorClassName || this.constructor.errorClassName;
 		this.dependants = [];
@@ -222,10 +224,10 @@ Form.Field = Backbone.View.extend({
 	},
 
 	/**
-	* Check the validity of the field
-	*
-	* @return {String}
-	*/
+	 * Check the validity of the field
+	 *
+	 * @return {String}
+	 */
 	validate: function() {
 		var error = this.editor.validate();
 
@@ -246,23 +248,19 @@ Form.Field = Backbone.View.extend({
 	setError: function(msg) {
 		//Nested form editors (e.g. Object) set their errors internally
 		if (this.editor.hasNestedForm) return;
-
-		//Add error CSS class
-		this.$el.addClass(this.errorClassName);
-
-		//Set error message
-		this.$('[data-error]').html(msg);
+		
+		if ( msg == undefined ) {
+			this.clearError();
+		} else {
+			this.showError.call(this, msg);
+		}
 	},
 
 	/**
 	* Clear the error state and reset the help message
 	*/
 	clearError: function() {
-		//Remove error CSS class
-		this.$el.removeClass(this.errorClassName);
-
-		//Clear error message
-		this.$('[data-error]').empty();
+		this.hideError.call(this);
 	},
 
 	/**
@@ -318,20 +316,30 @@ Form.Field = Backbone.View.extend({
 }, {
   //STATICS
 
-  template: _.template('\
-    <div>\
-      <label for="<%= editorId %>"><%= title %></label>\
-      <div>\
-        <span data-editor></span>\
-        <div data-error></div>\
-        <div><%= help %></div>\
-      </div>\
-    </div>\
-  ', null, Form.templateSettings),
+	template: _.template('\
+		<div>\
+			<label for="<%= editorId %>"><%= title %></label>\
+			<div>\
+				<span data-editor></span>\
+				<div data-error></div>\
+				<div><%= help %></div>\
+			</div>\
+		</div>\
+	', null, Form.templateSettings),
 
-  /**
-   * CSS class name added to the field when there is a validation error
-   */
-  errorClassName: 'error'
+	/**
+	 * CSS class name added to the field when there is a validation error
+	 */
+	errorClassName: 'error',
+
+	showError: function (msg) {
+		this.$el.addClass( this.errorClassName );
+		this.$('[data-error]').html(msg);
+	},
+	
+	hideError: function () {
+		this.$el.removeClass( this.errorClassName );
+		this.$('[data-error]').empty();
+	}
 
 });

@@ -114,7 +114,8 @@ var Form = Backbone.View.extend({
 		})();
 
 		//Store important data
-		_.extend(this, _.pick(options, 'model', 'data', 'idPrefix'));
+		_.extend(this, _.pick(options, 'model', 'data', 'idPrefix',
+			'showError', 'hideError', 'formContainer'));
 
 		//Override defaults
 		var constructor = this.constructor;
@@ -130,7 +131,7 @@ var Form = Backbone.View.extend({
 		var fields = this.fields = {};
 
 		_.each(selectedFields, function(key) {
-		var fieldSchema = schema[key];
+			var fieldSchema = schema[key];
 			fields[key] = this.createField(key, fieldSchema);
 		}, this);
 
@@ -175,7 +176,9 @@ var Form = Backbone.View.extend({
 			form: this,
 			key: key,
 			schema: schema,
-			idPrefix: this.idPrefix
+			idPrefix: this.idPrefix,
+			hideError: this.hideError,
+			showError: this.showError
 		};
 
 		if (this.model) {
@@ -241,7 +244,13 @@ var Form = Backbone.View.extend({
 		fields = this.fields;
 
 		//Render form
-		var $form = $($.trim(this.template(_.result(this, 'templateData'))));
+		var $form;
+		if ( this.formContainer ) {
+			$form = $(this.formContainer).empty().hide();
+			$form.attr('data-fieldsets', 1);
+		} else {
+			$form = $($.trim(this.template(_.result(this, 'templateData'))));
+		}
 
 		//Render standalone editors
 		$form.find('[data-editors]').add($form).each(function(i, el) {
@@ -265,21 +274,21 @@ var Form = Backbone.View.extend({
 
 		//Render standalone fields
 		$form.find('[data-fields]').add($form).each(function(i, el) {
-		var $container = $(el),
-		selection = $container.attr('data-fields');
+			var $container = $(el),
+			selection = $container.attr('data-fields');
 
-		if (_.isUndefined(selection)) return;
+			if (_.isUndefined(selection)) return;
 
-		//Work out which fields to include
-		var keys = (selection == '*')
-			? self.selectedFields || _.keys(fields)
-			: selection.split(',');
+			//Work out which fields to include
+			var keys = (selection == '*')
+				? self.selectedFields || _.keys(fields)
+				: selection.split(',');
 
-		//Add them
-		_.each(keys, function(key) {
-			var field = fields[key];
+			//Add them
+			_.each(keys, function(key) {
+				var field = fields[key];
 
-			$container.append(field.render().el);
+				$container.append(field.render().el);
 			});
 		});
 
@@ -294,6 +303,12 @@ var Form = Backbone.View.extend({
 				$container.append(fieldset.render().el);
 			});
 		});
+		
+		$form.css('display', '');
+		
+		if ( this.formContainer ) {
+			$form = $form.closest('form');
+		}
 
 		// Setup the form.submit handler
 		var submit = this._submitHandler;
@@ -517,6 +532,7 @@ var Form = Backbone.View.extend({
 		for ( var ii = 0; ii < this._chosen_editors.length; ii++ ) {
 			this._chosen_editors[ii].initDisplay();
 		}
+		return this;
 	},
   
 	/**
@@ -527,6 +543,7 @@ var Form = Backbone.View.extend({
 		method = method || 'html';
 		$(parent)[method]( this.render().el );
 		this.initChosens();
+		return this;
 	},
 	
 	/**
@@ -539,6 +556,7 @@ var Form = Backbone.View.extend({
 		}
 		
 		this._submitHandler = submit;
+		return this;
 	}
 
 }, {
@@ -665,13 +683,12 @@ var SceForm = Form.extend({
 				throw new Error("Unknown field '" + key + "'");
 			}
 			
-			var text = (error instanceof Array) ? error.join('<br/>') : error;
-			this.fields[key].setSchemaAttr( 'errortext', text );
+			this.fields[key].setError( error );
 		}, this);
 		
 		_.each(this.current_errors, function (error, key) {
 			if ( !errors[key] ) {
-				this.fields[key].setSchemaAttr( 'errortext', null );
+				this.fields[key].setError(null);
 			}
 		}, this);
 		
@@ -839,20 +856,6 @@ var SceForm = Form.extend({
 	 * @param @see params from _parseField (these should always be identical)
 	 */
 	_parseRangeField: function (fields, result, options, sce_field) {
-		/*var makeRangeField = function(name, label, cvindex) {
-			var name  = sce_field.name + name;
-			var label = sce_field.label + label;
-			var value = (sce_field.current_value) ? sce_field.current_value[cvindex] : null;
-			
-			var field = { title: label, template: options.fieldTemplate, schemaAttrs: sce_field };
-			
-			result.schema[ name ]   = field;
-			result.model[ name ]    = value;
-			fields[ fields.length ] = name;
-		};
-		
-		makeRangeField('_min', ' Min', 0);
-		makeRangeField('_max', ' Max', 1);*/
 		return this._parseNormalField(fields, result, options, sce_field);
 	},
 	
@@ -880,6 +883,10 @@ var SceForm = Form.extend({
 		result.schema[ sce_field.name ] = field;
 		result.model[ sce_field.name ]  = sce_field.current_value;
 		fields[ fields.length ]         = sce_field.name;
+		
+		if ( sce_field.datatype == 'date' ) {
+			result.model[ sce_field.name ] *= 1000;
+		}
 	},
 	
 	/**
@@ -946,6 +953,8 @@ var SceForm = Form.extend({
 			case 'date':
 				return { type: 'Date' };
 			case 'int':
+				return { type: 'Text' };
+			case 'ip_address':
 				return { type: 'Text' };
 			/*case 'range': Handled separately because it requires 2 fields */
 			case 'single_select':
@@ -1321,6 +1330,8 @@ Form.Field = Backbone.View.extend({
 		var schema = this.schema = this.createSchema(options.schema);
 
 		//Override defaults
+		this.showError = options.showError || schema.showError || this.constructor.showError;
+		this.hideError = options.hideError || schema.hideError || this.constructor.hideError;
 		this.template = options.template || schema.template || this.constructor.template;
 		this.errorClassName = options.errorClassName || this.constructor.errorClassName;
 		this.dependants = [];
@@ -1515,10 +1526,10 @@ Form.Field = Backbone.View.extend({
 	},
 
 	/**
-	* Check the validity of the field
-	*
-	* @return {String}
-	*/
+	 * Check the validity of the field
+	 *
+	 * @return {String}
+	 */
 	validate: function() {
 		var error = this.editor.validate();
 
@@ -1539,23 +1550,19 @@ Form.Field = Backbone.View.extend({
 	setError: function(msg) {
 		//Nested form editors (e.g. Object) set their errors internally
 		if (this.editor.hasNestedForm) return;
-
-		//Add error CSS class
-		this.$el.addClass(this.errorClassName);
-
-		//Set error message
-		this.$('[data-error]').html(msg);
+		
+		if ( msg == undefined ) {
+			this.clearError();
+		} else {
+			this.showError.call(this, msg);
+		}
 	},
 
 	/**
 	* Clear the error state and reset the help message
 	*/
 	clearError: function() {
-		//Remove error CSS class
-		this.$el.removeClass(this.errorClassName);
-
-		//Clear error message
-		this.$('[data-error]').empty();
+		this.hideError.call(this);
 	},
 
 	/**
@@ -1611,21 +1618,31 @@ Form.Field = Backbone.View.extend({
 }, {
   //STATICS
 
-  template: _.template('\
-    <div>\
-      <label for="<%= editorId %>"><%= title %></label>\
-      <div>\
-        <span data-editor></span>\
-        <div data-error></div>\
-        <div><%= help %></div>\
-      </div>\
-    </div>\
-  ', null, Form.templateSettings),
+	template: _.template('\
+		<div>\
+			<label for="<%= editorId %>"><%= title %></label>\
+			<div>\
+				<span data-editor></span>\
+				<div data-error></div>\
+				<div><%= help %></div>\
+			</div>\
+		</div>\
+	', null, Form.templateSettings),
 
-  /**
-   * CSS class name added to the field when there is a validation error
-   */
-  errorClassName: 'error'
+	/**
+	 * CSS class name added to the field when there is a validation error
+	 */
+	errorClassName: 'error',
+
+	showError: function (msg) {
+		this.$el.addClass( this.errorClassName );
+		this.$('[data-error]').html(msg);
+	},
+	
+	hideError: function () {
+		this.$el.removeClass( this.errorClassName );
+		this.$('[data-error]').empty();
+	}
 
 });
 
@@ -2132,7 +2149,6 @@ Form.editors.Select = Form.editors.Base.extend({
 
 	events: {
 		'change': function(event) {
-			console.log('changed');
 			this.value = this.getValue();
 			this.trigger('change', this);
 		},
@@ -2608,8 +2624,10 @@ Form.editors.Range = Form.editors.Base.extend({
 		var inputs = this.$el.children('input');
 		
 		return _.map(inputs.toArray(), function(input) {
-			var value = parseFloat(input.value);
-			return isNaN(value) ? null : value;
+			// TODO: Client-side validation would use this method
+			/*var value = parseFloat(input.value);
+			return isNaN(value) ? null : value;*/
+			return input.value;
 		});
 	},
 	

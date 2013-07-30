@@ -48,7 +48,8 @@ var Form = Backbone.View.extend({
 		})();
 
 		//Store important data
-		_.extend(this, _.pick(options, 'model', 'data', 'idPrefix'));
+		_.extend(this, _.pick(options, 'model', 'data', 'idPrefix',
+			'showError', 'hideError', 'formContainer'));
 
 		//Override defaults
 		var constructor = this.constructor;
@@ -64,7 +65,7 @@ var Form = Backbone.View.extend({
 		var fields = this.fields = {};
 
 		_.each(selectedFields, function(key) {
-		var fieldSchema = schema[key];
+			var fieldSchema = schema[key];
 			fields[key] = this.createField(key, fieldSchema);
 		}, this);
 
@@ -109,7 +110,9 @@ var Form = Backbone.View.extend({
 			form: this,
 			key: key,
 			schema: schema,
-			idPrefix: this.idPrefix
+			idPrefix: this.idPrefix,
+			hideError: this.hideError,
+			showError: this.showError
 		};
 
 		if (this.model) {
@@ -175,7 +178,13 @@ var Form = Backbone.View.extend({
 		fields = this.fields;
 
 		//Render form
-		var $form = $($.trim(this.template(_.result(this, 'templateData'))));
+		var $form;
+		if ( this.formContainer ) {
+			$form = $(this.formContainer).empty().hide();
+			$form.attr('data-fieldsets', 1);
+		} else {
+			$form = $($.trim(this.template(_.result(this, 'templateData'))));
+		}
 
 		//Render standalone editors
 		$form.find('[data-editors]').add($form).each(function(i, el) {
@@ -199,21 +208,21 @@ var Form = Backbone.View.extend({
 
 		//Render standalone fields
 		$form.find('[data-fields]').add($form).each(function(i, el) {
-		var $container = $(el),
-		selection = $container.attr('data-fields');
+			var $container = $(el),
+			selection = $container.attr('data-fields');
 
-		if (_.isUndefined(selection)) return;
+			if (_.isUndefined(selection)) return;
 
-		//Work out which fields to include
-		var keys = (selection == '*')
-			? self.selectedFields || _.keys(fields)
-			: selection.split(',');
+			//Work out which fields to include
+			var keys = (selection == '*')
+				? self.selectedFields || _.keys(fields)
+				: selection.split(',');
 
-		//Add them
-		_.each(keys, function(key) {
-			var field = fields[key];
+			//Add them
+			_.each(keys, function(key) {
+				var field = fields[key];
 
-			$container.append(field.render().el);
+				$container.append(field.render().el);
 			});
 		});
 
@@ -228,6 +237,12 @@ var Form = Backbone.View.extend({
 				$container.append(fieldset.render().el);
 			});
 		});
+		
+		$form.css('display', '');
+		
+		if ( this.formContainer ) {
+			$form = $form.closest('form');
+		}
 
 		// Setup the form.submit handler
 		var submit = this._submitHandler;
@@ -451,6 +466,7 @@ var Form = Backbone.View.extend({
 		for ( var ii = 0; ii < this._chosen_editors.length; ii++ ) {
 			this._chosen_editors[ii].initDisplay();
 		}
+		return this;
 	},
   
 	/**
@@ -461,6 +477,7 @@ var Form = Backbone.View.extend({
 		method = method || 'html';
 		$(parent)[method]( this.render().el );
 		this.initChosens();
+		return this;
 	},
 	
 	/**
@@ -473,6 +490,7 @@ var Form = Backbone.View.extend({
 		}
 		
 		this._submitHandler = submit;
+		return this;
 	}
 
 }, {

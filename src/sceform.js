@@ -105,13 +105,12 @@ var SceForm = Form.extend({
 				throw new Error("Unknown field '" + key + "'");
 			}
 			
-			var text = (error instanceof Array) ? error.join('<br/>') : error;
-			this.fields[key].setSchemaAttr( 'errortext', text );
+			this.fields[key].setError( error );
 		}, this);
 		
 		_.each(this.current_errors, function (error, key) {
 			if ( !errors[key] ) {
-				this.fields[key].setSchemaAttr( 'errortext', null );
+				this.fields[key].setError(null);
 			}
 		}, this);
 		
@@ -279,20 +278,6 @@ var SceForm = Form.extend({
 	 * @param @see params from _parseField (these should always be identical)
 	 */
 	_parseRangeField: function (fields, result, options, sce_field) {
-		/*var makeRangeField = function(name, label, cvindex) {
-			var name  = sce_field.name + name;
-			var label = sce_field.label + label;
-			var value = (sce_field.current_value) ? sce_field.current_value[cvindex] : null;
-			
-			var field = { title: label, template: options.fieldTemplate, schemaAttrs: sce_field };
-			
-			result.schema[ name ]   = field;
-			result.model[ name ]    = value;
-			fields[ fields.length ] = name;
-		};
-		
-		makeRangeField('_min', ' Min', 0);
-		makeRangeField('_max', ' Max', 1);*/
 		return this._parseNormalField(fields, result, options, sce_field);
 	},
 	
@@ -320,6 +305,10 @@ var SceForm = Form.extend({
 		result.schema[ sce_field.name ] = field;
 		result.model[ sce_field.name ]  = sce_field.current_value;
 		fields[ fields.length ]         = sce_field.name;
+		
+		if ( sce_field.datatype == 'date' ) {
+			result.model[ sce_field.name ] *= 1000;
+		}
 	},
 	
 	/**
@@ -386,6 +375,8 @@ var SceForm = Form.extend({
 			case 'date':
 				return { type: 'Date' };
 			case 'int':
+				return { type: 'Text' };
+			case 'ip_address':
 				return { type: 'Text' };
 			/*case 'range': Handled separately because it requires 2 fields */
 			case 'single_select':

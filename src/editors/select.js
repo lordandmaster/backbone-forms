@@ -13,7 +13,6 @@ Form.editors.Select = Form.editors.Base.extend({
 
 	events: {
 		'change': function(event) {
-			console.log('changed');
 			this.value = this.getValue();
 			this.trigger('change', this);
 		},

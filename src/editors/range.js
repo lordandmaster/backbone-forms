@@ -43,8 +43,10 @@ Form.editors.Range = Form.editors.Base.extend({
 		var inputs = this.$el.children('input');
 		
 		return _.map(inputs.toArray(), function(input) {
-			var value = parseFloat(input.value);
-			return isNaN(value) ? null : value;
+			// TODO: Client-side validation would use this method
+			/*var value = parseFloat(input.value);
+			return isNaN(value) ? null : value;*/
+			return input.value;
 		});
 	},
 	
