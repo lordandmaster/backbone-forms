@@ -10,7 +10,7 @@
   test('Default value', function() {
     var editor = new Editor().render();
 
-    same(editor.getValue(), [null,null]);
+    same(editor.getValue(), ['','']);
   });
 
   test('Custom value', function() {
@@ -18,7 +18,7 @@
       value: ['Test', 3.2]
     }).render();
 
-    same(editor.getValue(), [null,3.2]);
+    same(editor.getValue(), ['Test','3.2']);
   });
 
   /*test('Value from model', function() {
@@ -41,7 +41,7 @@
 
     editor.setValue([8.2, 8.3]);
 
-    same(editor.getValue(), [8.2, 8.3]);
+    same(editor.getValue(), ['8.2', '8.3']);
   });
 
 	test('Re-render preserves value', function() {
@@ -51,12 +51,12 @@
 		
 		editor.render().render();
 		
-		same(editor.getValue(), [4, 10]);
+		same(editor.getValue(), ['4', '10']);
 		
 		editor.setValue([3,2]);
 		editor.render();
 		
-		same(editor.getValue(), [3,2]);
+		same(editor.getValue(), ['3','2']);
 	});
 
 
