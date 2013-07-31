@@ -49,7 +49,7 @@ Form.Fieldset = Backbone.View.extend({
 		}
 
 		//Override defaults
-		this.template = options.template || this.constructor.template;
+		this.template = options.template || schema.template || this.constructor.template;
 	},
 	
 	_registerFields: function (fields, fields_ref) {

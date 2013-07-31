@@ -422,6 +422,55 @@
 		
 		same(editor.getValue(), 'Pam');
 	});
+	
+	
+	
+	module('Chosen multiple select', {
+		setup: function() {
+			this.sinon = sinon.sandbox.create();
+		},
+
+		teardown: function() {
+			this.sinon.restore();
+		}
+	});
+	
+	test('Reads the current values', function() {
+		var editor = new Editor({
+			value: ['hare', 'bunny'],
+			schema: {
+				schemaAttrs: { datatype: 'multi_select' },
+				options: ['rabbit', 'bunny', 'hare', 'midget']
+			}
+		}).render();
+		
+		same(editor.getValue(), ['bunny', 'hare']);
+		same(editor.$el.val(), ['bunny', 'hare']);
+	});
+	
+	test('setValue() - Set multiple values', function() {
+		var editor = new Editor({
+			value: ['hare', 'hair'],
+			schema: {
+				schemaAttrs: { datatype: 'multi_select' },
+				options: ['rabbit', 'bunny', 'hair', 'hare', 'badger']
+			}
+		}).render().render();
+		
+		editor.setValue('rabbit');
+		
+		same(editor.getValue(), ['rabbit']);
+		same(editor.$el.val(), ['rabbit']);
+		
+		editor.setValue(['hair', 'badger', 'bunny', 'bunny']);
+		
+		same(editor.getValue(), ['bunny', 'hair', 'badger']);
+		same(editor.$el.val(), ['bunny', 'hair', 'badger']);
+		
+		editor.setValue(['badger']);
+		
+		same(editor.getValue(), ['badger']);
+	});
 
 
 

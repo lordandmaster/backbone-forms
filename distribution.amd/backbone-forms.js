@@ -808,8 +808,9 @@ var SceForm = Form.extend({
 	_parseFieldset: function (result, options, parent, spec) {
 		var fieldset = {
 			type: 'fieldset',
+			template: options.fieldsetTemplate,
 			legend: spec.name,
-			help:   spec.description,
+			schemaAttrs: spec,
 			content: []
 		};
 		
@@ -1154,7 +1155,7 @@ Form.Fieldset = Backbone.View.extend({
 		}
 
 		//Override defaults
-		this.template = options.template || this.constructor.template;
+		this.template = options.template || schema.template || this.constructor.template;
 	},
 	
 	_registerFields: function (fields, fields_ref) {
@@ -1489,8 +1490,10 @@ Form.Field = Backbone.View.extend({
 			_.each(self.dependants, function (fieldset) {
 				if ( value ) {
 					fieldset.$el.addClass('active');
+					fieldset.$el.parent().addClass('active');
 				} else {
 					fieldset.$el.removeClass('active');
+					fieldset.$el.parent().removeClass('active');
 				}
 			});
 		};

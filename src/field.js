@@ -187,8 +187,10 @@ Form.Field = Backbone.View.extend({
 			_.each(self.dependants, function (fieldset) {
 				if ( value ) {
 					fieldset.$el.addClass('active');
+					fieldset.$el.parent().addClass('active');
 				} else {
 					fieldset.$el.removeClass('active');
+					fieldset.$el.parent().removeClass('active');
 				}
 			});
 		};

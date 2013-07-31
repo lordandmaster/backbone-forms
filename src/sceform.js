@@ -230,8 +230,9 @@ var SceForm = Form.extend({
 	_parseFieldset: function (result, options, parent, spec) {
 		var fieldset = {
 			type: 'fieldset',
+			template: options.fieldsetTemplate,
 			legend: spec.name,
-			help:   spec.description,
+			schemaAttrs: spec,
 			content: []
 		};
 		

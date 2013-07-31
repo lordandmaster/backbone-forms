@@ -247,6 +247,20 @@ test('creates a new instance of the Fieldset defined on the form', function() {
   same(optionsArg.fields, form.fields);
 });
 
+test('Uses fieldset template', function() {
+	var form = new SceForm({
+		fieldsetTemplate: function(data) { return '<span class="hi">' + data.schemaAttrs.name + '</span>'; },
+		specs: [{ category: { name: 'set', content: [{ fields: [
+			{ name: 'name', datatype: 'text' },
+			{ name: 'age', datatype: 'int' }
+		]}] }}],
+	}).render();
+	
+	same(cleanse(form.fieldsets[0].$el.html()), 'set');
+	
+	same(form.fieldsets[0].$el.hasClass('hi'), true);
+});
+
 
 
 module('SceForm#createField', {
@@ -329,6 +343,21 @@ test('adds listener to all editor events', function() {
   field.editor.trigger('foo');
 
   same(form.handleEditorEvent.callCount, 4);
+});
+
+test('Uses field template', function() {
+	var form = new SceForm({
+		fieldTemplate: function(data) { return '<span class="hi">' + data.schemaAttrs.name + '</span>'; },
+		specs: [{ category: { name: 'set', content: [{ fields: [
+			{ name: 'name', datatype: 'text' },
+			{ name: 'age', datatype: 'int' }
+		]}] }}],
+	}).render();
+	
+	same(cleanse(form.fields.name.$el.html()), 'name');
+	same(cleanse(form.fields.age.$el.html()), 'age');
+	
+	same(form.fields.name.$el.hasClass('hi'), true);
 });
 
 
@@ -851,7 +880,7 @@ test('Creates submit button', function() {
 
 test('Dynamically displays errors', function() {
 	var form = new SceForm({
-		fieldTemplate: function() { return '<span>' + data.schemaAttrs.errortext + '</span>'; },
+		fieldTemplate: function(data) { return '<span>' + data.schemaAttrs.errortext + '</span>'; },
 		schema: { title: {}, name: {} },
 		showError: showError,
 		hideError: hideError

@@ -37,13 +37,13 @@ Form.editors.Chosen = Form.editors.Select.extend({
 	},
 	
 	render: function() {
-		Form.editors.Select.prototype.render.call(this);
-		
 		// TODO: Should not use schemaAttrs for this check
 		var attrs = this.schema.schemaAttrs;
 		if ( attrs && attrs.datatype == 'multi_select' ) {
 			this.el.multiple = 'multiple';
 		}
+		
+		Form.editors.Select.prototype.render.call(this);
 		
 		return this;
 	},
